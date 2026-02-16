@@ -1,7 +1,7 @@
 # Contract Boundary
 
-`yai-cli` implementa e consuma specs pin-nate in `deps/yai-specs`.
-Le specs in quella directory sono la source-of-truth contrattuale.
+`yai-cli` implements and consumes pinned specs in `deps/yai-specs`.
+Specs in that directory are the contract source of truth.
 
 ## Canonical References
 
@@ -12,5 +12,5 @@ Le specs in quella directory sono la source-of-truth contrattuale.
 
 ## Rule
 
-Nessuna semantica comando/protocollo puo' essere inventata fuori dalle specs pin-nate.
-Se c'e' drift: aprire issue e riallineare CLI/specs prima del rilascio.
+No command/protocol semantics may be invented outside pinned specs.
+If drift exists: open an issue and realign CLI/specs before release.

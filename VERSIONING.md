@@ -1,14 +1,14 @@
 # Versioning
 
-`yai-cli` usa Semantic Versioning.
+`yai-cli` follows Semantic Versioning.
 
 ## SemVer
 
-- `MAJOR`: cambiamenti incompatibili lato CLI pubblico
-- `MINOR`: aggiunte backward-compatible
-- `PATCH`: fix e miglioramenti non-breaking
+- `MAJOR`: incompatible public CLI changes
+- `MINOR`: backward-compatible additions
+- `PATCH`: non-breaking fixes and documentation updates
 
-## Coordinamento con Specs
+## Specs Coordination
 
-Ogni rilascio CLI deve essere valutato rispetto al pin `deps/yai-specs`.
-Breaking lato contratto richiede bump MAJOR o allineamento esplicito del range compatibile.
+Each CLI release must be evaluated against the pinned `deps/yai-specs` revision.
+Contract-breaking changes require a MAJOR bump or an explicit compatibility range update.

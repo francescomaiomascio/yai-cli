@@ -1,12 +1,12 @@
 # Docs Index
 
-Documentazione operativa e contrattuale del repository `yai-cli`.
+Operational and contract documentation for `yai-cli`.
 
 ## Pages
 
-- `INSTALL.md` - build/install locale e verifica base
-- `BUNDLE.md` - modello bundle/versioning (CLI + specs pin)
-- `SPECS_PINNING.md` - regole di pinning del submodule specs
-- `COMMANDS.md` - source-of-truth comandi e regole anti-drift
-- `GOVERNANCE.md` - policy repo e disciplina di modifica
-- `CONTRACT.md` - boundary contrattuale CLI vs specs canoniche
+- `INSTALL.md` - local build/install and baseline verification
+- `BUNDLE.md` - bundle/versioning model (CLI + specs pin)
+- `SPECS_PINNING.md` - pinning rules for the specs submodule
+- `COMMANDS.md` - command source-of-truth and anti-drift rule
+- `GOVERNANCE.md` - repository governance and change discipline
+- `CONTRACT.md` - CLI/specs contract boundary

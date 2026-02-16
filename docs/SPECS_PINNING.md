@@ -1,15 +1,15 @@
 # Specs Pinning
 
-## Regola 1: Pin esplicito
+## Rule 1: Explicit pin
 
-`deps/yai-specs` e' un pin (commit o tag), non una reference flottante.
+`deps/yai-specs` is a pin (commit or tag), not a floating reference.
 
-## Regola 2: Compatibilita' dichiarata
+## Rule 2: Declared compatibility
 
-`yai-cli` deve dichiarare quali versioni specs supporta.
-Riferimento: `COMPATIBILITY.md`.
+`yai-cli` must declare which specs versions it supports.
+Reference: `COMPATIBILITY.md`.
 
-## Regola 3: No drift
+## Rule 3: No drift
 
-Se `yai-specs` cambia, `yai-cli` deve adeguarsi.
-Comandi o comportamenti fuori contratto non sono accettati.
+If `yai-specs` changes, `yai-cli` must adapt.
+Out-of-contract behavior is not acceptable.

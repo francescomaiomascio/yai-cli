@@ -2,18 +2,18 @@
 
 ## Source of Truth
 
-La source-of-truth dei comandi e':
+The command source of truth is:
 - `deps/yai-specs/cli/commands.v1.json`
 
-Lo schema associato e':
+The associated schema is:
 - `deps/yai-specs/cli/commands.schema.json`
 
-## Come leggere
+## How to read it
 
-1. `commands.v1.json` definisce il set comandi e la semantica contrattuale.
-2. `commands.schema.json` definisce la validazione formale del documento.
+1. `commands.v1.json` defines command set and contract semantics.
+2. `commands.schema.json` defines formal validation rules for that document.
 
-## Regola Operativa
+## Operational Rule
 
-Nessun comando "inventato" fuori dalle specs.
-Se c'e' drift tra CLI e specs: aprire issue e allineare prima del rilascio.
+No "invented" commands outside specs.
+If CLI/specs drift appears: open an issue and align before release.

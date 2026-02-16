@@ -1,6 +1,6 @@
 # YAI CLI
 
-YAI CLI e' il client ufficiale del Control Plane (Root/Kernel/Engine/Mind).
+YAI CLI is the official client for the Control Plane (Root/Kernel/Engine/Mind).
 
 ## Quickstart
 
@@ -10,12 +10,12 @@ yai ws list
 yai kernel status
 ```
 
-Questi comandi esistono oggi e passano dal control plane runtime.
+These commands exist today and run through the runtime control plane.
 
 ## Specs Pinned
 
-La source-of-truth contrattuale e' `deps/yai-specs`.
-Questa CLI consuma quel pin: nessun comando/protocollo deve divergere da li'.
+The contract source of truth is `deps/yai-specs`.
+This CLI consumes that pin; no command/protocol behavior may drift from it.
 
 ## Documentation
 

@@ -2,23 +2,23 @@
 
 ## Reporting Vulnerabilities
 
-Segnala vulnerabilita' in privato a: `security@yai.local` (placeholder).
-Non aprire disclosure pubblica prima di coordinamento con i maintainer.
+Report vulnerabilities privately to: `security@yai.local` (placeholder).
+Do not publish details before coordinated remediation.
 
 ## Disclosure Policy
 
-1. Ricezione e triage iniziale
-2. Riproduzione e classificazione impatto
-3. Fix e validazione
-4. Disclosure coordinata con advisory/release notes
+1. Intake and initial triage
+2. Reproduction and impact classification
+3. Fix and validation
+4. Coordinated disclosure with advisory/release notes
 
 ## Scope
 
 In scope:
-- parsing/input handling nel CLI
-- bypass di boundary/authority lato comandi
-- mismatch pericolosi tra CLI e contratto specs
+- parsing/input handling in the CLI
+- command boundary/authority bypasses
+- dangerous mismatches between CLI behavior and specs contracts
 
 ## Repository Safety
 
-Niente segreti, token o credenziali nel repository.
+No secrets, tokens, or credentials in this repository.

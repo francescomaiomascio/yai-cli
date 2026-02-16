@@ -2,24 +2,24 @@
 
 ## Scope
 
-Repo orientato a superficie pubblica CLI e allineamento contrattuale.
-Cambiare codice C/H/tests solo quando esplicitamente richiesto dal task.
+This repo focuses on the public CLI surface and contract alignment.
+Change C/H/tests only when explicitly requested by the task.
 
 ## Commit Convention
 
-- Commit piccoli e descrittivi
-- Un obiettivo per commit
-- Niente cambi misti non correlati
+- Small, descriptive commits
+- One clear goal per commit
+- No unrelated mixed changes
 
 ## Pull Request Rules
 
-- Spiega cosa cambia e perche'
-- Indica impatto su compatibilita' (`COMPATIBILITY.md`)
-- Evita PR giganti: preferire PR incrementali
+- Explain what changed and why
+- State compatibility impact (`COMPATIBILITY.md`)
+- Avoid giant PRs; prefer incremental PRs
 
 ## Minimum Checks
 
-Prima di aprire PR:
-- build locale (`make`)
-- verifica che working tree non includa artefatti non desiderati
-- verifica allineamento con `deps/yai-specs`
+Before opening a PR:
+- local build (`make`)
+- verify the working tree does not include unwanted artifacts
+- verify alignment with `deps/yai-specs`
