@@ -1,39 +1,32 @@
 # YAI CLI
 
-Canonical command-line entrypoint for YAI runtime operations.
-This repository is the public CLI surface consumed by operators, scripts, and higher-level tools.
+YAI CLI e' il client ufficiale del Control Plane (Root/Kernel/Engine/Mind).
 
-## What This Repo Provides
+## Quickstart
 
-- CLI binary build and distribution (`yai-cli`)
-- Stable command routing to runtime planes (`root`, `kernel`, `engine`, `mind`)
-- Contract-aligned integration with pinned `yai-specs`
+```bash
+yai root ping
+yai ws list
+yai kernel status
+```
 
-## Public Contract Boundary
+Questi comandi esistono oggi e passano dal control plane runtime.
 
-Normative compatibility is defined by pinned specs in `deps/yai-specs`.
-Implementation lives in this repository, while protocol/contract truth lives in specs.
+## Specs Pinned
 
-## Install
+La source-of-truth contrattuale e' `deps/yai-specs`.
+Questa CLI consuma quel pin: nessun comando/protocollo deve divergere da li'.
 
-Build from source using the project Makefile.
-The binary is produced under `dist/bin/yai-cli`.
+## Documentation
 
-## Usage
+- `docs/INSTALL.md`
+- `docs/BUNDLE.md`
+- `docs/SPECS_PINNING.md`
+- `docs/COMMANDS.md`
+- `docs/GOVERNANCE.md`
 
-Use `yai-cli` as the operator entrypoint for runtime control commands.
-Command behavior must remain aligned with active specs and compatibility rules.
+## Policies
 
-## Bundle / Pinning Model
-
-Consumers should treat this CLI as part of a pinned stack:
-- pin `yai-cli` revision
-- pin compatible `yai-specs` revision
-- upgrade both deliberately, validating compatibility before rollout
-
-## Repository Governance
-
-- `CONTRIBUTING.md` for contribution rules
-- `SECURITY.md` for security reporting
-- `CODE_OF_CONDUCT.md` for collaboration standards
-- `docs/` for contract and operational documentation
+- `SECURITY.md`
+- `CONTRIBUTING.md`
+- `CODE_OF_CONDUCT.md`

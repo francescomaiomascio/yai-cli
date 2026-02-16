@@ -1,11 +1,16 @@
 # Bundle
 
-## Goal
+## Concept
 
-Describe how `yai-cli` is packaged and shipped as part of an operator/runtime bundle.
+Il bundle ufficiale e' versione-pinned e firmabile (oggi il processo puo' essere manuale).
+Obiettivo: distribuire un insieme coerente di binari + specs senza drift.
 
-## Baseline
+## Layout (attuale)
 
-- Bundle should include a pinned CLI binary.
-- Bundle should include or reference a pinned `yai-specs` revision.
-- Bundle metadata should record compatible versions.
+- CLI bin: `dist/bin/yai-cli`
+- Specs pinned: `deps/yai-specs/`
+
+## Runtime Bundle (futuro, menzione)
+
+In un bundle runtime completo verranno inclusi anche i core bins (`yai/dist/bin/*`).
+Questa repository non implementa quella parte: la documenta soltanto.

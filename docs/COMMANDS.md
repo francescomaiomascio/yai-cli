@@ -1,20 +1,19 @@
 # Commands
 
-## Scope
+## Source of Truth
 
-This file is the high-level command index for public CLI usage.
+La source-of-truth dei comandi e':
+- `deps/yai-specs/cli/commands.v1.json`
 
-## Command Groups
+Lo schema associato e':
+- `deps/yai-specs/cli/commands.schema.json`
 
-- `root`
-- `kernel`
-- `engine`
-- `mind`
-- `ws`
-- `law`
-- `test`
-- `up`
+## Come leggere
 
-## Note
+1. `commands.v1.json` definisce il set comandi e la semantica contrattuale.
+2. `commands.schema.json` definisce la validazione formale del documento.
 
-Detailed semantics must remain aligned with pinned contract definitions.
+## Regola Operativa
+
+Nessun comando "inventato" fuori dalle specs.
+Se c'e' drift tra CLI e specs: aprire issue e allineare prima del rilascio.

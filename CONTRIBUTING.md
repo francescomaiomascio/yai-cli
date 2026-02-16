@@ -1,18 +1,25 @@
 # Contributing
 
-## Rules
+## Scope
 
-- Keep changes small and atomic.
-- Use descriptive commit messages.
-- Do not modify C sources/headers/tests unless explicitly requested by maintainers.
-- Keep CLI behavior aligned with pinned `yai-specs` contracts.
+Repo orientato a superficie pubblica CLI e allineamento contrattuale.
+Cambiare codice C/H/tests solo quando esplicitamente richiesto dal task.
 
-## Pull Requests
+## Commit Convention
 
-- Explain intent and impact.
-- Mention compatibility considerations.
-- Update docs when public behavior or usage changes.
+- Commit piccoli e descrittivi
+- Un obiettivo per commit
+- Niente cambi misti non correlati
 
-## Contract Discipline
+## Pull Request Rules
 
-If a change depends on normative spec updates, coordinate with `yai-specs` first.
+- Spiega cosa cambia e perche'
+- Indica impatto su compatibilita' (`COMPATIBILITY.md`)
+- Evita PR giganti: preferire PR incrementali
+
+## Minimum Checks
+
+Prima di aprire PR:
+- build locale (`make`)
+- verifica che working tree non includa artefatti non desiderati
+- verifica allineamento con `deps/yai-specs`

@@ -1,17 +1,24 @@
 # Security Policy
 
-## Reporting
+## Reporting Vulnerabilities
 
-Report security issues privately to maintainers through the designated private channel.
-Avoid public disclosure before remediation is prepared.
+Segnala vulnerabilita' in privato a: `security@yai.local` (placeholder).
+Non aprire disclosure pubblica prima di coordinamento con i maintainer.
+
+## Disclosure Policy
+
+1. Ricezione e triage iniziale
+2. Riproduzione e classificazione impatto
+3. Fix e validazione
+4. Disclosure coordinata con advisory/release notes
 
 ## Scope
 
 In scope:
-- input parsing vulnerabilities
-- unsafe command execution paths
-- privilege boundary mistakes in CLI runtime interactions
+- parsing/input handling nel CLI
+- bypass di boundary/authority lato comandi
+- mismatch pericolosi tra CLI e contratto specs
 
-## Secrets
+## Repository Safety
 
-Never commit credentials, private tokens, or sensitive runtime data.
+Niente segreti, token o credenziali nel repository.

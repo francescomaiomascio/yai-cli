@@ -1,9 +1,11 @@
 # Compatibility
 
-This CLI must remain compatible with the pinned `yai-specs` revision.
+Compatibilita' ufficiale tra `yai-cli` e `yai-specs`.
 
-## Rules
+| yai-cli | yai-specs supported range |
+|---|---|
+| v1.x | >=1.0.0 <2.0.0 |
+| v2.x (future) | >=2.0.0 <3.0.0 |
 
-- Consumers should reject major compatibility mismatches.
-- CLI upgrades should be validated against specs before rollout.
-- Public command behavior must stay aligned with active contract definitions.
+Nota:
+- Bundle ufficiale = CLI + specs pinned + core bins.
