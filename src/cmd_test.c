@@ -10,7 +10,7 @@
  *
  * Future:
  *  - wire to docs/runbooks/
- *  - execute vectors from law/specs/vectors/
+ *  - execute vectors from contracts/vectors/
  *  - protocol conformance checks
  */
 

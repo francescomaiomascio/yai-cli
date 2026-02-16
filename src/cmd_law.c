@@ -45,11 +45,11 @@ typedef struct {
 } law_req_t;
 
 static const law_req_t REQ[] = {
-    { "law/specs/control/control_plane.v1.json", 0 },
-    { "law/specs/control/authority.json",        0 },
-    { "law/specs/protocol/protocol.h",           0 },
-    { "law/specs/protocol/transport.h",          0 },
-    { "law/specs/protocol/yai_protocol_ids.h",   0 },
+    { "contracts/control/control_plane.v1.json", 0 },
+    { "contracts/control/authority.json",        0 },
+    { "contracts/protocol/protocol.h",           0 },
+    { "contracts/protocol/transport.h",          0 },
+    { "contracts/protocol/yai_protocol_ids.h",   0 },
     { "law/formal/YAI_KERNEL.tla",               0 },
     { "law/formal/spec_map.md",                  0 },
     { NULL, 0 }
