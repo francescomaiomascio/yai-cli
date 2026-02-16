@@ -10,7 +10,7 @@
  *
  * Future:
  *  - wire to docs/runbooks/
- *  - execute vectors from contracts/vectors/
+ *  - execute vectors from resolved specs root (YAI_SPECS_DIR or repo fallback)
  *  - protocol conformance checks
  */
 

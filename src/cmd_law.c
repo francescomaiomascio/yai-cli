@@ -1,8 +1,8 @@
 #include "../include/yai_cmd_law.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <errno.h>
 
 #define LAW_PATH_MAX 512
 
@@ -16,44 +16,63 @@ static int dir_exists(const char *p) {
     return (p && p[0] && stat(p, &st) == 0 && S_ISDIR(st.st_mode));
 }
 
-/*
- * Resolve repository-relative prefix for accessing `law/...`
- */
-static const char* find_law_prefix(void) {
-    static const char *CANDIDATES[] = {
-        "",
-        "../",
-        "../../",
-        "../../../",
-        NULL
-    };
-
-    for (int i = 0; CANDIDATES[i]; i++) {
-        char path[LAW_PATH_MAX];
-        int n = snprintf(path, sizeof(path), "%slaw", CANDIDATES[i]);
-        if (n > 0 && (size_t)n < sizeof(path) && dir_exists(path)) {
-            return CANDIDATES[i];
-        }
-    }
-
-    return NULL;
-}
-
 typedef struct {
     const char *rel_path;
     int must_be_dir;
 } law_req_t;
 
 static const law_req_t REQ[] = {
-    { "contracts/control/control_plane.v1.json", 0 },
-    { "contracts/control/authority.json",        0 },
-    { "contracts/protocol/protocol.h",           0 },
-    { "contracts/protocol/transport.h",          0 },
-    { "contracts/protocol/yai_protocol_ids.h",   0 },
-    { "law/formal/YAI_KERNEL.tla",               0 },
-    { "law/formal/spec_map.md",                  0 },
+    { "control/control_plane.v1.json", 0 },
+    { "control/authority.json",        0 },
+    { "protocol/protocol.h",           0 },
+    { "protocol/transport.h",          0 },
+    { "protocol/yai_protocol_ids.h",   0 },
     { NULL, 0 }
 };
+
+/*
+ * Resolve specs root dynamically.
+ * Priority:
+ *   1) YAI_SPECS_DIR (explicit override)
+ *   2) repository-relative fallbacks
+ */
+static int find_specs_root(char *out, size_t cap) {
+    if (!out || cap < 8) return 0;
+
+    const char *env = getenv("YAI_SPECS_DIR");
+    if (env && env[0]) {
+        if (dir_exists(env)) {
+            int n = snprintf(out, cap, "%s", env);
+            return (n > 0 && (size_t)n < cap);
+        }
+    }
+
+    static const char *PREFIXES[] = {
+        "",
+        "../",
+        "../../",
+        "../../../",
+        NULL
+    };
+    static const char *ROOTS[] = {
+        "deps/yai-specs",
+        "contracts",
+        NULL
+    };
+
+    for (int i = 0; PREFIXES[i]; i++) {
+        for (int j = 0; ROOTS[j]; j++) {
+            char path[LAW_PATH_MAX];
+            int n = snprintf(path, sizeof(path), "%s%s", PREFIXES[i], ROOTS[j]);
+            if (n > 0 && (size_t)n < sizeof(path) && dir_exists(path)) {
+                n = snprintf(out, cap, "%s", path);
+                return (n > 0 && (size_t)n < cap);
+            }
+        }
+    }
+
+    return 0;
+}
 
 static void law_usage(void) {
     fprintf(stderr,
@@ -61,25 +80,24 @@ static void law_usage(void) {
         "Usage:\n"
         "  yai law check    # verify core specs exist\n"
         "  yai law tree     # print logical structure\n"
-        "  yai law status   # exit 0 if law/ found, else 2\n"
+        "  yai law status   # exit 0 if specs root is found, else 2\n"
     );
 }
 
 static int cmd_check(void) {
-    const char *prefix = find_law_prefix();
-    if (!prefix) {
-        fprintf(stderr, "[law][FATAL] 'law/' not found. Run from repo root.\n");
+    char specs_root[LAW_PATH_MAX];
+    if (!find_specs_root(specs_root, sizeof(specs_root))) {
+        fprintf(stderr, "[law][FATAL] specs root not found. Set YAI_SPECS_DIR or run from repo root.\n");
         return 2;
     }
 
     int ok = 1;
-    printf("[law] Integrity check (prefix: %s)\n",
-           prefix[0] ? prefix : "./");
+    printf("[law] Integrity check (specs root: %s)\n", specs_root);
 
     for (int i = 0; REQ[i].rel_path; i++) {
         char full[LAW_PATH_MAX];
-        int n = snprintf(full, sizeof(full), "%s%s",
-                         prefix, REQ[i].rel_path);
+        int n = snprintf(full, sizeof(full), "%s/%s",
+                         specs_root, REQ[i].rel_path);
 
         if (n <= 0 || (size_t)n >= sizeof(full)) {
             fprintf(stderr, "  [FAIL] %s (path overflow)\n",
@@ -111,11 +129,8 @@ static int cmd_check(void) {
 }
 
 static int cmd_tree(void) {
-    puts("law/ (Sovereignty Root)");
-    puts("├── axioms/");
-    puts("├── boundaries/");
-    puts("├── formal/");
-    puts("└── specs/");
+    puts("specs/ (resolved by YAI_SPECS_DIR or repo fallbacks)");
+    puts("└── [deps/yai-specs | contracts]/");
     puts("    ├── control/");
     puts("    ├── protocol/");
     puts("    └── ...");
@@ -123,10 +138,9 @@ static int cmd_tree(void) {
 }
 
 static int cmd_status(void) {
-    const char *prefix = find_law_prefix();
-    if (prefix) {
-        printf("[law] FOUND (prefix: %s)\n",
-               prefix[0] ? prefix : "./");
+    char specs_root[LAW_PATH_MAX];
+    if (find_specs_root(specs_root, sizeof(specs_root))) {
+        printf("[law] FOUND (specs root: %s)\n", specs_root);
         return 0;
     }
 
