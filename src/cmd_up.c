@@ -2,6 +2,9 @@
 #include "../include/yai_cmd.h"
 #include "../include/yai_paths.h"
 
+#define _DEFAULT_SOURCE
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
