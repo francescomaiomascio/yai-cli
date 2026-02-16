@@ -1,13 +1,13 @@
 # ==========================================
-# YAI CLI Build System (Standalone-Ready)
+# YAI CLI Build System (Standalone)
 # ==========================================
 
-CC ?= gcc
+CC ?= cc
 
 # ---- Local repo layout ----
 ROOT_DIR := $(abspath .)
 
-# Compat con orchestrator (monorepo) oppure standalone
+# Compat con orchestrator (se mai lo richiamassi) oppure standalone
 OUT_BUILD_DIR ?= $(ROOT_DIR)/build
 OUT_BIN_DIR   ?= $(ROOT_DIR)/dist/bin
 
@@ -16,14 +16,20 @@ BIN_DIR   := $(OUT_BIN_DIR)
 
 TARGET := $(BIN_DIR)/yai-cli
 
-# ---- Protocol include (temporary monorepo link) ----
-# In monorepo: ../../law/specs
-# In repo standalone: puoi mettere deps/yai-specs oppure vendor/specs
-LAW_DIR ?= ../../law/specs
+# ---- Specs (submodule) ----
+SPECS_DIR := $(ROOT_DIR)/deps/yai-specs
 
-CFLAGS ?= -Wall -Wextra -O2 -std=c11 -MMD -MP \
-          -I./include \
-          -I$(LAW_DIR)
+# ---- Flags ----
+CFLAGS ?= -Wall -Wextra -O2 -std=c11 -MMD -MP
+CFLAGS += -I$(ROOT_DIR)/include
+
+# Specs include roots:
+# - $(SPECS_DIR)        => abilita include tipo <protocol/...> o <vault/...>
+# - $(SPECS_DIR)/protocol => abilita include “piatti” tipo <yai_protocol_ids.h>, <transport.h>, <roles.h>, <protocol.h>
+# - $(SPECS_DIR)/vault    => abilita include tipo <yai_vault_abi.h>
+# - runtime headers        => <rpc_runtime.h>
+CFLAGS += -I$(SPECS_DIR)
+CFLAGS += -I$(SPECS_DIR)/protocol -I$(SPECS_DIR)/vault -I$(SPECS_DIR)/protocol/runtime
 
 LDFLAGS ?=
 
@@ -60,7 +66,7 @@ $(TARGET): $(OBJS)
 	@$(CC) $(OBJS) -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/%.o: src/%.c | dirs
-	@echo "CC $<"
+	@echo "[CC] $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 clean:

@@ -2,7 +2,7 @@
 #include "../include/yai_cmd.h"
 #include "../include/yai_rpc.h"
 
-#include <protocol/yai_protocol_ids.h>
+#include <yai_protocol_ids.h>
 
 #include <stdio.h>
 #include <string.h>
