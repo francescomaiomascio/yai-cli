@@ -1,7 +1,7 @@
-#include "../include/yai_fmt.h"
+#include "yai_cli/fmt.h"
 // tools/cli/src/fmt.c
 
-#include "../include/yai_fmt.h"
+#include "yai_cli/fmt.h"
 #include <stdio.h>
 #include <string.h>
 

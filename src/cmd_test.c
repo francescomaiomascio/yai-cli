@@ -1,5 +1,5 @@
-#include "../include/yai_cli.h"
-#include "../include/yai_rpc.h"
+#include "yai_cli/cli.h"
+#include "yai_cli/rpc.h"
 #include <stdio.h>
 #include <string.h>
 

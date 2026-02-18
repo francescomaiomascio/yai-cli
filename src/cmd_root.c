@@ -1,8 +1,8 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "../include/yai_cmd.h"
-#include "../include/yai_rpc.h"
-#include "../include/yai_fmt.h"
+#include "yai_cli/cmd.h"
+#include "yai_cli/rpc.h"
+#include "yai_cli/fmt.h"
 
 #include <yai_protocol_ids.h>
 

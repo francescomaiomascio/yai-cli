@@ -1,6 +1,6 @@
-#include "../include/yai_fmt.h"
-#include "../include/yai_cli.h"
-#include "../include/yai_rpc.h"
+#include "yai_cli/fmt.h"
+#include "yai_cli/cli.h"
+#include "yai_cli/rpc.h"
 
 #include <yai_protocol_ids.h>
 

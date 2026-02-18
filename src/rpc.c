@@ -1,7 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "../include/yai_rpc.h"
-#include "../include/yai_paths.h"
+#include "yai_cli/rpc.h"
+#include "yai_cli/paths.h"
 
 #include <transport.h>
 #include <yai_protocol_ids.h>

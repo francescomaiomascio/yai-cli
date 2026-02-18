@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 // tools/cli/src/cmd_dispatch.c
 
-#include "../include/yai_cmd.h"
-#include "../include/yai_fmt.h"
+#include "yai_cli/cmd.h"
+#include "yai_cli/fmt.h"
 
 #include <stdio.h>
 #include <string.h>

@@ -1,6 +1,6 @@
 // tools/cli/src/env.c
 
-#include "../include/yai_env.h"
+#include "yai_cli/env.h"
 #include <stdlib.h>
 
 /* ------------------------------------------------------------

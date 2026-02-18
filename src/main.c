@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 // tools/cli/src/main.c
 
-#include "../include/yai_cli.h"
-#include "../include/yai_cmd.h"
+#include "yai_cli/cli.h"
+#include "yai_cli/cmd.h"
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,7 +1,7 @@
 #ifndef YAI_CMD_H
 #define YAI_CMD_H
 
-#include "yai_cli.h"
+#include "yai_cli/cli.h"
 
 /* Top-level dispatcher */
 int yai_cmd_dispatch(
