@@ -6,7 +6,7 @@ All notable changes to this repository are documented here.
 
 - No unreleased changes.
 
-## [0.1.0] - 2026-02-17
+## [0.1.7] - 2026-02-17
 
 - Initial public baseline release of `yai-cli`.
 - Apache-2.0 licensing hardening (`LICENSE`, `NOTICE`, third-party notices).
