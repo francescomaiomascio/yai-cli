@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "TODO: yai-cli-verify not implemented yet"
+exit 2
