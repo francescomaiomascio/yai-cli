@@ -1,12 +1,8 @@
-# Docs Index
+# yai-cli Documentation
 
-Operational and contract documentation for `yai-cli`.
+- `docs/guide/`: installation, quickstart, commands, troubleshooting.
+- `docs/reference/`: contract-facing references and governance docs.
+- `docs/development/`: build, testing, release, specs pinning, and repo tooling.
+- `docs/api/`: generated/API landing pages.
 
-## Pages
-
-- `INSTALL.md` - local build/install and baseline verification
-- `BUNDLE.md` - bundle/versioning model (CLI + specs pin)
-- `SPECS_PINNING.md` - pinning rules for the specs submodule
-- `COMMANDS.md` - command source-of-truth and anti-drift rule
-- `GOVERNANCE.md` - repository governance and change discipline
-- `CONTRACT.md` - CLI/specs contract boundary
+Start from `docs/guide/quickstart.md` and `docs/development/repo-tooling.md`.

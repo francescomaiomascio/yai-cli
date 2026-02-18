@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
-echo "TODO: yai-cli-release not implemented yet"
-exit 2
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+PYTHONPATH="$REPO_ROOT/tools/python" exec python3 -m yai_cli_tools.cli release "$@"

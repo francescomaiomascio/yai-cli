@@ -7,7 +7,6 @@ CC ?= cc
 # ---- Local repo layout ----
 ROOT_DIR := $(abspath .)
 
-# Compat con orchestrator (se mai lo richiamassi) oppure standalone
 OUT_BUILD_DIR ?= $(ROOT_DIR)/build
 OUT_BIN_DIR   ?= $(ROOT_DIR)/dist/bin
 
@@ -25,7 +24,6 @@ SPECS_INC_RUNTIME := $(SPECS_DIR)/specs/protocol/runtime/include
 # ---- Flags ----
 CFLAGS ?= -Wall -Wextra -O2 -std=c11 -MMD -MP
 CFLAGS += -I$(ROOT_DIR)/include
-
 CFLAGS += -I$(SPECS_DIR)
 CFLAGS += -I$(SPECS_INC_PROTOCOL) -I$(SPECS_INC_VAULT) -I$(SPECS_INC_RUNTIME)
 
@@ -50,7 +48,11 @@ SRCS := \
 
 OBJS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 
-.PHONY: all clean dirs docs docs-clean
+TEST_BIN_DIR := $(BUILD_DIR)/tests
+UNIT_TEST_BIN := $(TEST_BIN_DIR)/unit_parse_test
+VECTORS_TEST_BIN := $(TEST_BIN_DIR)/vectors_rpc_test
+
+.PHONY: all clean dirs docs docs-clean test
 
 all: dirs docs $(TARGET)
 	@echo "--- [YAI-CLI] Build Complete ---"
@@ -85,5 +87,23 @@ docs:
 
 docs-clean:
 	@rm -rf $(DOXY_OUT)
+
+# -----------------------------------------
+# Tests
+# -----------------------------------------
+test: $(UNIT_TEST_BIN) $(VECTORS_TEST_BIN)
+	@echo "[TEST] $(UNIT_TEST_BIN)"
+	@$(UNIT_TEST_BIN)
+	@echo "[TEST] $(VECTORS_TEST_BIN)"
+	@$(VECTORS_TEST_BIN)
+	@echo "--- [YAI-CLI] Tests Complete ---"
+
+$(UNIT_TEST_BIN): tests/unit/parse_test.c | dirs
+	@mkdir -p $(TEST_BIN_DIR)
+	@$(CC) $(CFLAGS) $< -o $@
+
+$(VECTORS_TEST_BIN): tests/vectors/rpc_vectors_test.c | dirs
+	@mkdir -p $(TEST_BIN_DIR)
+	@$(CC) $(CFLAGS) $< -o $@
 
 -include $(OBJS:.o=.d)

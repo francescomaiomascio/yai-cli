@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-PYTHONPATH="$REPO_ROOT/tools/python" exec python3 -m yai_cli_tools.cli verify "$@"
+PYTHONPATH="$REPO_ROOT/tools/python" exec python3 -m yai_cli_tools.cli doctor "$@"

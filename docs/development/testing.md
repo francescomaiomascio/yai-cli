@@ -1,3 +1,3 @@
 # Testing
 
-TODO: add testing documentation.
+Use `make test` for unit and vectors tests.
