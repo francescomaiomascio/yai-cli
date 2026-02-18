@@ -48,7 +48,7 @@ SRCS := \
     src/support/fmt.c \
     src/runtime/rpc_client.c
 
-OBJS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS)
+OBJS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 
 .PHONY: all clean dirs docs docs-clean
 
