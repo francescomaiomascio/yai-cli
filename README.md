@@ -31,9 +31,9 @@ The CLI follows the contracts. If the contract changes, the CLI updates *with it
 
 The CLI is governed by pinned specs:
 
-- Canonical command set: `deps/yai-specs/cli/commands.v1.json`
-- Canonical schema: `deps/yai-specs/cli/commands.schema.json`
-- Protocol envelope + IDs: `deps/yai-specs/protocol/*`
+- Canonical command set: `deps/yai-specs/specs/cli/schema/commands.v1.json`
+- Canonical schema: `deps/yai-specs/specs/cli/schema/commands.schema.json`
+- Protocol envelope + IDs: `deps/yai-specs/specs/protocol/include/*`
 
 If behavior drifts from the pinned specs, it's a bug. Fix the implementation — do not "work around" it.
 
