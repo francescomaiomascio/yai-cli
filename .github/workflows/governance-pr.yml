@@ -1,0 +1,16 @@
+name: governance-pr
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review, closed]
+
+jobs:
+  governance-suite:
+    uses: yai-labs/yai-infra/.github/workflows/reusable-governance-suite.yml@gov-suite-v0.1.0
+    with:
+      org: yai-labs
+      project_number: 5
+      enable_project_sync: true
+      enable_template_verify: true
+      dry_run: false
+    secrets: inherit
