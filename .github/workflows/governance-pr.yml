@@ -6,7 +6,7 @@ on:
 
 jobs:
   governance-suite:
-    uses: yai-labs/yai-infra/.github/workflows/reusable-governance-suite.yml@main
+    uses: yai-labs/yai-infra/.github/workflows/reusable-governance-suite.yml@gov-suite-v0.1.0
     with:
       org: yai-labs
       project_number: 5
