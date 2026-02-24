@@ -1,7 +1,26 @@
-# PR Checklist
+## Context
 
-- [ ] Scope and intent are clear.
-- [ ] No changes to normative/spec sources unless explicitly intended.
-- [ ] No changes to `src/**/*.c`, `include/**/*.h`, `tests/**/*.c` in docs-only hardening.
-- [ ] Compatibility impact was considered.
-- [ ] Documentation updated where needed.
+## What Changed
+
+## Why
+
+## Verification
+- [ ] `make all`
+- [ ] Relevant verify/gate scripts executed (specify below)
+- [ ] Documentation updated (if needed)
+
+### Commands Run
+```bash
+# paste commands here
+```
+
+## Contract Alignment
+- [ ] No contract changes in `deps/yai-specs`
+- [ ] Contract changes included and linked
+
+## Risk / Rollback
+
+## Checklist
+- [ ] No secrets/PII committed
+- [ ] Third-party notices updated (if vendoring/importing code)
+- [ ] CHANGELOG/compatibility impact considered
