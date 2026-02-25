@@ -202,15 +202,17 @@ int yai_cmd_down(int argc, char **argv, const yai_cli_opts_t *opt)
         return 2;
     }
 
-    yai_cli_opts_t stop_opt = {0};
-    stop_opt.arming = 1;
-    stop_opt.role = "operator";
-    stop_opt.client_version = "yai-cli/1.0";
+    if (!force) {
+        yai_cli_opts_t stop_opt = {0};
+        stop_opt.arming = 1;
+        stop_opt.role = "operator";
+        stop_opt.client_version = "yai-cli/1.0";
 
-    int rc = run_kernel_stop(&stop_opt);
-    if (rc != 0 && !force) {
-        fprintf(stderr, "ERR: kernel stop failed (%d). Use --force to continue cleanup.\n", rc);
-        return rc;
+        int rc = run_kernel_stop(&stop_opt);
+        if (rc != 0) {
+            fprintf(stderr, "ERR: kernel stop failed (%d). Use --force to continue cleanup.\n", rc);
+            return rc;
+        }
     }
 
     if (force) {
