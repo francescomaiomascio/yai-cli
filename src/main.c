@@ -32,6 +32,8 @@ static void print_usage(void) {
     printf("Examples:\n");
     printf("  yai up --ws dev --detach\n");
     printf("  yai down --ws dev\n");
+    printf("  yai status\n");
+    printf("  yai doctor\n");
     printf("  yai root status\n");
     printf("  yai kernel ws list\n");
     printf("  yai engine --ws dev storage put_node '{\"id\":\"n1\"}'\n");
@@ -136,7 +138,10 @@ int main(int argc, char **argv) {
     }
 
     if (i >= argc) {
-        if (strcmp(target_bin, "up") == 0 || strcmp(target_bin, "down") == 0) {
+        if (strcmp(target_bin, "up") == 0 ||
+            strcmp(target_bin, "down") == 0 ||
+            strcmp(target_bin, "status") == 0 ||
+            strcmp(target_bin, "doctor") == 0) {
             return yai_cmd_dispatch(target_bin, 0, NULL, &opt);
         }
         fprintf(stderr,

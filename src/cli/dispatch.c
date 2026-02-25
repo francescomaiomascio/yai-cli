@@ -25,6 +25,8 @@ static void usage_global(void)
         "\nUsage:\n"
         "  yai up     [--ws <id>] [--detach] [--allow-degraded]\n"
         "  yai down   [--ws <id>] [--force]\n"
+        "  yai status [--ws <id>] [--json]\n"
+        "  yai doctor [--ws <id>] [--json]\n"
         "  yai root   <status|ping>\n"
         "  yai kernel <status|ping|stop|ws>\n"
         "  yai engine --ws <id> <gate> <method> [params]\n"
@@ -52,6 +54,15 @@ int yai_cmd_dispatch(
 
     if (strcmp(binary, "down") == 0)
         return yai_cmd_down(argc, argv, opt);
+
+    /* ---------------- STATUS / DOCTOR ---------------- */
+
+
+    if (strcmp(binary, "status") == 0)
+        return yai_cmd_status(argc, argv, opt);
+
+    if (strcmp(binary, "doctor") == 0)
+        return yai_cmd_doctor(argc, argv, opt);
 
     /* ---------------- ROOT ---------------- */
 

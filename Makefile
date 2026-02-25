@@ -42,6 +42,7 @@ SRCS := \
     src/commands/law.c \
     src/commands/selftest.c \
     src/commands/up.c \
+    src/commands/status.c \
     src/platform/env.c \
     src/platform/paths.c \
     src/support/fmt.c \

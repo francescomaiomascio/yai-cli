@@ -57,4 +57,14 @@ int yai_cmd_down(
     char **argv,
     const yai_cli_opts_t *opt);
 
+int yai_cmd_status(
+    int argc,
+    char **argv,
+    const yai_cli_opts_t *opt);
+
+int yai_cmd_doctor(
+    int argc,
+    char **argv,
+    const yai_cli_opts_t *opt);
+
 #endif
