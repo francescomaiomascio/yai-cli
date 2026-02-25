@@ -30,6 +30,8 @@ static void print_usage(void) {
     printf("  -a, --arming      Enable privileged commands\n");
     printf("  -r, --role <...>  Role (default: user)\n\n");
     printf("Examples:\n");
+    printf("  yai up --ws dev --detach\n");
+    printf("  yai down --ws dev\n");
     printf("  yai root status\n");
     printf("  yai kernel ws list\n");
     printf("  yai engine --ws dev storage put_node '{\"id\":\"n1\"}'\n");
@@ -113,6 +115,9 @@ int main(int argc, char **argv) {
             return yai_cmd_dispatch(target_bin, 1, (char*[]){"help"}, &opt);
 
         } else {
+            if (strcmp(target_bin, "up") == 0 || strcmp(target_bin, "down") == 0) {
+                break;
+            }
             fprintf(stderr, "ERR: unknown option: %s\n", a);
             return 2;
         }
@@ -131,6 +136,9 @@ int main(int argc, char **argv) {
     }
 
     if (i >= argc) {
+        if (strcmp(target_bin, "up") == 0 || strcmp(target_bin, "down") == 0) {
+            return yai_cmd_dispatch(target_bin, 0, NULL, &opt);
+        }
         fprintf(stderr,
             "ERR: Missing command for '%s'\n",
             target_bin);

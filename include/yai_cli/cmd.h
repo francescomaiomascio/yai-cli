@@ -52,4 +52,9 @@ int yai_cmd_up(
     char **argv,
     const yai_cli_opts_t *opt);
 
+int yai_cmd_down(
+    int argc,
+    char **argv,
+    const yai_cli_opts_t *opt);
+
 #endif
