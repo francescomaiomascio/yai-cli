@@ -13,7 +13,8 @@ OUT_BIN_DIR   ?= $(ROOT_DIR)/dist/bin
 BUILD_DIR := $(OUT_BUILD_DIR)
 BIN_DIR   := $(OUT_BIN_DIR)
 
-TARGET := $(BIN_DIR)/yai-cli
+TARGET := $(BIN_DIR)/yai
+LEGACY_TARGET := $(BIN_DIR)/yai-cli
 
 # ---- Specs (submodule) ----
 SPECS_DIR := $(ROOT_DIR)/deps/yai-specs
@@ -64,6 +65,7 @@ dirs:
 $(TARGET): $(OBJS)
 	@echo "[LINK] CLI: $@"
 	@$(CC) $(OBJS) -o $@ $(LDFLAGS)
+	@ln -sf yai $(LEGACY_TARGET)
 
 $(BUILD_DIR)/%.o: src/%.c | dirs
 	@mkdir -p $(dir $@)

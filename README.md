@@ -53,21 +53,22 @@ make
 ```
 
 Outputs:
-- `dist/bin/yai-cli`
+- `dist/bin/yai` (canonical)
+- `dist/bin/yai-cli` (compat alias)
 
 ## Quick usage
 
 ```bash
 # Root plane (global authority)
-./dist/bin/yai-cli root status
-./dist/bin/yai-cli root ping
+./dist/bin/yai root status
+./dist/bin/yai root ping
 
 # Kernel plane (workspace lifecycle / control)
-./dist/bin/yai-cli kernel ws list
+./dist/bin/yai kernel ws list
 
 # Engine/Mind are workspace-scoped
-./dist/bin/yai-cli engine --ws dev status
-./dist/bin/yai-cli mind   --ws dev chat "ciao"
+./dist/bin/yai engine --ws dev status
+./dist/bin/yai mind   --ws dev chat "ciao"
 ```
 
 ## Governance and lifecycle
