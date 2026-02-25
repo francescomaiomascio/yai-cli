@@ -35,6 +35,31 @@ static int wait_for_root_ready(void)
     return -1;
 }
 
+static int kernel_socket_exists(void)
+{
+    const char *home = getenv("HOME");
+    if (!home || !home[0])
+        return -1;
+
+    char sock[512];
+    int n = snprintf(sock, sizeof(sock), "%s/.yai/run/kernel/control.sock", home);
+    if (n <= 0 || (size_t)n >= sizeof(sock))
+        return -1;
+
+    struct stat st;
+    return (stat(sock, &st) == 0) ? YAI_OK : -1;
+}
+
+static int wait_for_kernel_ready(void)
+{
+    for (int i = 0; i < WAIT_RETRIES; i++) {
+        if (kernel_socket_exists() == YAI_OK)
+            return YAI_OK;
+        usleep(WAIT_INTERVAL_US);
+    }
+    return -1;
+}
+
 static int resolve_bin(char *out, size_t cap, const char *name)
 {
     const char *env_bin = NULL;
@@ -159,6 +184,11 @@ int yai_cmd_up(int argc, char **argv, const yai_cli_opts_t *opt)
             fprintf(stderr, "[ERROR] Root Plane did not become ready (boot=%s).\n", boot_bin);
             return -3;
         }
+    }
+
+    if (wait_for_kernel_ready() != YAI_OK) {
+        fprintf(stderr, "[ERROR] Kernel Plane did not become ready (kernel control socket missing).\n");
+        return -5;
     }
 
     char cmd2[1024];
