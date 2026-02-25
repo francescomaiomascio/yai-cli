@@ -21,6 +21,7 @@ typedef struct {
     int engine_sock_ok;
     int root_ping_ok;
     int kernel_ping_ok;
+    int engine_rpc_ok;
     int ready;
 } runtime_status_t;
 
@@ -93,6 +94,43 @@ static int kernel_ping_ok_impl(const yai_cli_opts_t *opt)
     return rc == 0;
 }
 
+static int engine_rpc_ok_impl(const yai_cli_opts_t *opt, const char *ws)
+{
+    if (!ws || !ws[0])
+        return 0;
+
+    yai_rpc_client_t c;
+    memset(&c, 0, sizeof(c));
+
+    if (yai_rpc_connect(&c, ws) != 0)
+        return 0;
+
+    const char *role = (opt && opt->role && opt->role[0]) ? opt->role : "operator";
+    int arming = (opt && opt->arming) ? opt->arming : 1;
+    yai_rpc_set_authority(&c, arming, role);
+
+    if (yai_rpc_handshake(&c) != 0) {
+        yai_rpc_close(&c);
+        return 0;
+    }
+
+    const char payload[] = "{\"method\":\"get_node\",\"params\":{\"id\":\"__yai_status_probe__\"}}";
+    char response[YAI_RPC_LINE_MAX];
+    uint32_t resp_len = 0;
+
+    int rc = yai_rpc_call_raw(
+        &c,
+        YAI_CMD_STORAGE_RPC,
+        payload,
+        (uint32_t)strlen(payload),
+        response,
+        sizeof(response) - 1,
+        &resp_len);
+
+    yai_rpc_close(&c);
+    return rc == 0;
+}
+
 static void resolve_kernel_sock(char *out, size_t cap)
 {
     const char *home = getenv("HOME");
@@ -131,7 +169,8 @@ static runtime_status_t collect_status(const yai_cli_opts_t *opt)
 
     st.root_ping_ok = root_ping_ok_impl();
     st.kernel_ping_ok = kernel_ping_ok_impl(opt);
-    st.ready = st.root_ping_ok && st.kernel_ping_ok;
+    st.engine_rpc_ok = engine_rpc_ok_impl(opt, st.ws);
+    st.ready = st.root_ping_ok && st.kernel_ping_ok && st.engine_rpc_ok;
 
     return st;
 }
@@ -141,15 +180,16 @@ static void print_status_human(const runtime_status_t *st)
     printf("[status] ws=%s\n", st->ws);
     printf("  root_socket   : %s (%s)\n", st->root_sock_ok ? "ready" : "missing", st->root_sock);
     printf("  kernel_socket : %s (%s)\n", st->kernel_sock_ok ? "ready" : "missing", st->kernel_sock);
-    printf("  engine_socket : %s (%s)\n", st->engine_sock_ok ? "ready" : "missing", st->engine_sock);
+    printf("  engine_socket : %s (%s) [informational]\n", st->engine_sock_ok ? "ready" : "missing", st->engine_sock);
     printf("  root_ping     : %s\n", st->root_ping_ok ? "ok" : "fail");
     printf("  kernel_ping   : %s\n", st->kernel_ping_ok ? "ok" : "fail");
+    printf("  engine_rpc    : %s\n", st->engine_rpc_ok ? "ok" : "fail");
     printf("  overall       : %s\n", st->ready ? "READY" : "DEGRADED");
 }
 
 static void print_status_json(const runtime_status_t *st)
 {
-    printf("{\"command\":\"status\",\"ok\":%s,\"ws\":\"%s\",\"overall\":\"%s\",\"sockets\":{\"root\":%s,\"kernel\":%s,\"engine\":%s},\"pings\":{\"root\":%s,\"kernel\":%s},\"paths\":{\"root\":\"%s\",\"kernel\":\"%s\",\"engine\":\"%s\"}}\n",
+    printf("{\"command\":\"status\",\"ok\":%s,\"ws\":\"%s\",\"overall\":\"%s\",\"sockets\":{\"root\":%s,\"kernel\":%s,\"engine\":%s},\"pings\":{\"root\":%s,\"kernel\":%s},\"engine\":{\"rpc_ok\":%s,\"socket_exposed\":%s},\"paths\":{\"root\":\"%s\",\"kernel\":\"%s\",\"engine\":\"%s\"}}\n",
            st->ready ? "true" : "false",
            st->ws,
            st->ready ? "READY" : "DEGRADED",
@@ -158,6 +198,8 @@ static void print_status_json(const runtime_status_t *st)
            st->engine_sock_ok ? "true" : "false",
            st->root_ping_ok ? "true" : "false",
            st->kernel_ping_ok ? "true" : "false",
+           st->engine_rpc_ok ? "true" : "false",
+           st->engine_sock_ok ? "true" : "false",
            st->root_sock,
            st->kernel_sock,
            st->engine_sock);
@@ -165,7 +207,7 @@ static void print_status_json(const runtime_status_t *st)
 
 static void print_doctor_json(const runtime_status_t *st)
 {
-    printf("{\"command\":\"doctor\",\"doctor\":\"%s\",\"ok\":%s,\"ws\":\"%s\",\"overall\":\"%s\",\"hint\":\"use yai up --ws <id> --detach --allow-degraded; then yai root ping && yai kernel --arming --role operator ping\",\"status\":{\"ok\":%s,\"overall\":\"%s\",\"sockets\":{\"root\":%s,\"kernel\":%s,\"engine\":%s},\"pings\":{\"root\":%s,\"kernel\":%s},\"paths\":{\"root\":\"%s\",\"kernel\":\"%s\",\"engine\":\"%s\"}}}\n",
+    printf("{\"command\":\"doctor\",\"doctor\":\"%s\",\"ok\":%s,\"ws\":\"%s\",\"overall\":\"%s\",\"hint\":\"use yai up --ws <id> --detach --allow-degraded; then yai root ping && yai kernel --arming --role operator ping\",\"status\":{\"ok\":%s,\"overall\":\"%s\",\"sockets\":{\"root\":%s,\"kernel\":%s,\"engine\":%s},\"pings\":{\"root\":%s,\"kernel\":%s},\"engine\":{\"rpc_ok\":%s,\"socket_exposed\":%s},\"paths\":{\"root\":\"%s\",\"kernel\":\"%s\",\"engine\":\"%s\"}}}\n",
            st->ready ? "ok" : "needs_attention",
            st->ready ? "true" : "false",
            st->ws,
@@ -177,6 +219,8 @@ static void print_doctor_json(const runtime_status_t *st)
            st->engine_sock_ok ? "true" : "false",
            st->root_ping_ok ? "true" : "false",
            st->kernel_ping_ok ? "true" : "false",
+           st->engine_rpc_ok ? "true" : "false",
+           st->engine_sock_ok ? "true" : "false",
            st->root_sock,
            st->kernel_sock,
            st->engine_sock);
@@ -217,9 +261,10 @@ int yai_cmd_doctor(int argc, char **argv, const yai_cli_opts_t *opt)
             printf("[doctor] OK: runtime is healthy (ws=%s)\n", st.ws);
         } else {
             printf("[doctor] ATTENTION: runtime not ready (ws=%s, overall=%s)\n", st.ws, st.ready ? "READY" : "DEGRADED");
-            printf("[doctor] root_ping=%s kernel_ping=%s root_sock=%s kernel_sock=%s\n",
+            printf("[doctor] root_ping=%s kernel_ping=%s engine_rpc=%s root_sock=%s kernel_sock=%s\n",
                    st.root_ping_ok ? "ok" : "fail",
                    st.kernel_ping_ok ? "ok" : "fail",
+                   st.engine_rpc_ok ? "ok" : "fail",
                    st.root_sock_ok ? "ready" : "missing",
                    st.kernel_sock_ok ? "ready" : "missing");
             printf("[doctor] Try:\n");
@@ -227,6 +272,7 @@ int yai_cmd_doctor(int argc, char **argv, const yai_cli_opts_t *opt)
             printf("  yai up --ws dev --detach --allow-degraded\n");
             printf("  yai root ping\n");
             printf("  yai kernel --arming --role operator ping\n");
+            printf("  yai engine --ws <id> --arming --role operator storage get_node '{\"id\":\"__yai_status_probe__\"}'\n");
         }
     }
 
