@@ -17,9 +17,11 @@ LEGACY_TARGET := $(BIN_DIR)/yai-cli
 
 # ---- Law (submodule) ----
 LAW_DIR := $(ROOT_DIR)/deps/yai-law
-LAW_INC_PROTOCOL := $(LAW_DIR)/law/surfaces/protocol/include
-LAW_INC_VAULT    := $(LAW_DIR)/law/surfaces/vault/include
-LAW_INC_RUNTIME  := $(LAW_DIR)/law/surfaces/protocol/runtime/include
+
+# NEW yai-law layout (contracts/*)
+LAW_INC_PROTOCOL := $(LAW_DIR)/contracts/protocol/include
+LAW_INC_VAULT    := $(LAW_DIR)/contracts/vault/include
+LAW_INC_RUNTIME  := $(LAW_DIR)/contracts/protocol/runtime/include
 
 # ---- Flags ----
 CFLAGS ?= -Wall -Wextra -O2 -std=c11 -MMD -MP
@@ -58,6 +60,7 @@ SRCS := \
     src/ops/commands/verify.c \
     src/ops/commands/workspace.c\
 	src/ops/commands/control_stubs.c \
+	src/law/registry_cache_bridge.c \
 
 OBJS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 
