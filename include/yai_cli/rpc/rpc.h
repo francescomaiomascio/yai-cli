@@ -6,16 +6,18 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stddef.h>
 
 /*
  * RPC client (strict, low-level)
  *
- * This is the transport-facing client used by ops/handlers.
- * Porcelain should not “do RPC directly” except via ops_dispatch.
+ * Single source of truth for the CLI RPC transport client.
+ * Implemented by src/runtime/rpc_client.c (connect/handshake/call_raw).
  *
- * Contract notes:
- * - ws_id is required for any workspace-scoped operations (L2/L3).
- * - role/arming are part of the envelope authority surface.
+ * Notes:
+ * - ws_id is bound at connect time (copied into client)
+ * - role/arming are stamped into the envelope for every call
+ * - output buffers are caller-provided (no YAI_RPC_LINE_MAX here)
  */
 
 typedef struct yai_rpc_client {
@@ -56,24 +58,6 @@ int yai_rpc_call_raw(
  * Returns 0 on success.
  */
 int yai_rpc_handshake(yai_rpc_client_t *c);
-
-/* ------------------------------------------------------------------
- * Optional legacy shim (if you still have call-sites using ctx-style).
- * You can delete this once you migrate all call-sites to yai_rpc_client_t.
- * ------------------------------------------------------------------ */
-
-typedef struct {
-    const char *ws;
-    const char *socket_path; /* reserved; current implementation resolves via yai_cli/paths.h */
-} yai_rpc_ctx_t;
-
-static inline int yai_rpc_init(yai_rpc_ctx_t *ctx, const char *ws)
-{
-    if (!ctx) return -1;
-    ctx->ws = ws;
-    ctx->socket_path = 0;
-    return 0;
-}
 
 #ifdef __cplusplus
 }

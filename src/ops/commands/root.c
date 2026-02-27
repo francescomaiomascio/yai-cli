@@ -1,45 +1,36 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 #define _POSIX_C_SOURCE 200809L
 
-#include <yai_cli/cmd.h>
+#include <yai_cli/ops/ops.h>
 #include <yai_cli/rpc/rpc.h>
-#include <yai_cli/fmt.h>
 
 #include <yai_protocol_ids.h>
 
 #include <stdio.h>
 #include <string.h>
-
-/* ============================================================
-   USAGE
-   ============================================================ */
+#include <stdint.h>
 
 static void usage_root(void)
 {
     fprintf(stderr,
         "Machine Root Plane\n"
         "Usage:\n"
-        "  yai-cli root status\n"
-        "  yai-cli root ping\n");
+        "  yai root ping\n"
+        "  yai root status\n");
 }
-
-/* ============================================================
-   CONNECT + HANDSHAKE
-   ============================================================ */
 
 static int root_connect_and_handshake(yai_rpc_client_t *c)
 {
-    if (!c)
-        return -1;
-
+    if (!c) return -1;
     memset(c, 0, sizeof(*c));
 
-    /* Root plane always runs on system workspace */
+    /* Root plane is global: fixed workspace "system" */
     if (yai_rpc_connect(c, "system") != 0) {
         fprintf(stderr, "[CLI] Failed to connect to root plane\n");
         return -2;
     }
 
-    /* Escalate authority */
+    /* TODO: bind this to porcelain ctx (arming/role) when ops ctx exists */
     yai_rpc_set_authority(c, 1, "operator");
 
     int rc = yai_rpc_handshake(c);
@@ -52,16 +43,11 @@ static int root_connect_and_handshake(yai_rpc_client_t *c)
     return 0;
 }
 
-/* ============================================================
-   ROOT PING
-   ============================================================ */
-
-static int cmd_root_ping(void)
+static int root_ping(void)
 {
     yai_rpc_client_t c;
-
     if (root_connect_and_handshake(&c) != 0)
-        return -10;
+        return 3;
 
     char response[YAI_RPC_LINE_MAX];
     uint32_t resp_len = 0;
@@ -79,51 +65,36 @@ static int cmd_root_ping(void)
     if (rc != 0) {
         fprintf(stderr, "[CLI] Root ping failed (rc=%d)\n", rc);
         yai_rpc_close(&c);
-        return -20;
+        return 4;
     }
 
     response[resp_len] = '\0';
-    printf("%s\n", response);
+    puts(response);
 
     yai_rpc_close(&c);
     return 0;
 }
 
 /* ============================================================
-   ROOT STATUS (alias ping)
+   OPS ENTRYPOINT (new world)
    ============================================================ */
 
-static int cmd_root_status(void)
+int yai_ops_control_root(int argc, char **argv)
 {
-    return cmd_root_ping();
-}
+    const char *sub = (argc >= 1) ? argv[0] : NULL;
 
-/* ============================================================
-   ENTRY
-   ============================================================ */
-
-int yai_cmd_root(int argc,
-                 char **argv,
-                 const yai_cli_opts_t *opt)
-{
-    (void)opt;
-
-    if (argc < 1) {
+    if (!sub || !sub[0] || strcmp(sub, "help") == 0) {
         usage_root();
-        return 1;
+        return sub ? 0 : 2;
     }
 
-    if (strcmp(argv[0], "ping") == 0)
-        return cmd_root_ping();
+    if (strcmp(sub, "ping") == 0)
+        return root_ping();
 
-    if (strcmp(argv[0], "status") == 0)
-        return cmd_root_status();
+    if (strcmp(sub, "status") == 0)
+        return root_ping();
 
-    if (strcmp(argv[0], "help") == 0) {
-        usage_root();
-        return 0;
-    }
-
+    fprintf(stderr, "ERR: unknown root subcommand: %s\n", sub);
     usage_root();
     return 2;
 }

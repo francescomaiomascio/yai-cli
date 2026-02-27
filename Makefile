@@ -4,7 +4,6 @@
 
 CC ?= cc
 
-# ---- Local repo layout ----
 ROOT_DIR := $(abspath .)
 
 OUT_BUILD_DIR ?= $(ROOT_DIR)/build
@@ -16,37 +15,48 @@ BIN_DIR   := $(OUT_BIN_DIR)
 TARGET := $(BIN_DIR)/yai
 LEGACY_TARGET := $(BIN_DIR)/yai-cli
 
-# ---- Specs (submodule) ----
-LAW_DIR := 20 20 101 12 61 79 80 81 98 702 701 33 100 204 250 395 398 399 400ROOT_DIR)/deps/yai-law
-LAW_INC_PROTOCOL := 20 20 101 12 61 79 80 81 98 702 701 33 100 204 250 395 398 399 400LAW_DIR)/law/surfaces/protocol/include
-LAW_INC_VAULT := 20 20 101 12 61 79 80 81 98 702 701 33 100 204 250 395 398 399 400LAW_DIR)/law/surfaces/vault/include
-LAW_INC_RUNTIME := 20 20 101 12 61 79 80 81 98 702 701 33 100 204 250 395 398 399 400LAW_DIR)/law/surfaces/protocol/runtime/include
+# ---- Law (submodule) ----
+LAW_DIR := $(ROOT_DIR)/deps/yai-law
+LAW_INC_PROTOCOL := $(LAW_DIR)/law/surfaces/protocol/include
+LAW_INC_VAULT    := $(LAW_DIR)/law/surfaces/vault/include
+LAW_INC_RUNTIME  := $(LAW_DIR)/law/surfaces/protocol/runtime/include
 
 # ---- Flags ----
 CFLAGS ?= -Wall -Wextra -O2 -std=c11 -MMD -MP
 CFLAGS += -I$(ROOT_DIR)/include
-CFLAGS += -I$((LAW_DIR))
 CFLAGS += -I$(LAW_INC_PROTOCOL) -I$(LAW_INC_VAULT) -I$(LAW_INC_RUNTIME)
 
 LDFLAGS ?=
 
 # ---- Sources ----
+# NOTE: single source of truth for RPC is src/rpc/rpc_client.c
+#       (src/rpc/rpc.c removed / not compiled)
 SRCS := \
     src/main.c \
-    src/cli/dispatch.c \
-    src/commands/engine.c \
-    src/commands/kernel.c \
-    src/commands/mind.c \
-    src/commands/root.c \
-    src/commands/workspace.c \
-    src/commands/law.c \
-    src/commands/selftest.c \
-    src/commands/up.c \
-    src/commands/status.c \
+    src/support/fmt.c \
     src/platform/env.c \
     src/platform/paths.c \
-    src/support/fmt.c \
-    src/runtime/rpc_client.c
+    src/rpc/rpc_client.c \
+    src/law/law.c \
+    src/law/law_help.c \
+    src/law/law_paths.c \
+    src/law/registry_cache.c \
+    src/law/registry_load.c \
+    src/law/registry_query.c \
+    src/law/registry_validate.c \
+    src/porcelain/porcelain.c \
+    src/porcelain/porcelain_errors.c \
+    src/porcelain/porcelain_help.c \
+    src/porcelain/porcelain_output.c \
+    src/porcelain/porcelain_parse.c \
+    src/ops/ops_dispatch.c \
+    src/ops/commands/engine.c \
+    src/ops/commands/kernel.c \
+    src/ops/commands/lifecycle.c \
+    src/ops/commands/root.c \
+    src/ops/commands/status.c \
+    src/ops/commands/verify.c \
+    src/ops/commands/workspace.c
 
 OBJS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 

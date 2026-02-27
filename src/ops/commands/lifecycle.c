@@ -1,19 +1,26 @@
-#include <yai_cli/cli.h>
-#include <yai_cli/cmd.h>
-#include <yai_cli/paths.h>
+/* SPDX-License-Identifier: Apache-2.0 */
+// src/ops/commands/lifecycle.c
 
 #define _DEFAULT_SOURCE
 #define _POSIX_C_SOURCE 200809L
+
+#include <yai_cli/ops/ops.h>
+#include <yai_cli/paths.h>
+#include <yai_cli/rpc/rpc.h>
+#include <yai_protocol_ids.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <stdint.h>
 
 #define YAI_OK 0
 #define WAIT_RETRIES 20
 #define WAIT_INTERVAL_US 200000
+
+enum { YAI_CLI_RPC_RESP_MAX = 4096 };
 
 static int root_socket_exists(void)
 {
@@ -103,12 +110,6 @@ static int resolve_bin(char *out, size_t cap, const char *name)
     return (len > 0 && access(out, X_OK) == 0) ? 0 : -1;
 }
 
-static int run_kernel_stop(const yai_cli_opts_t *opt)
-{
-    char *argv_stop[] = {"stop"};
-    return yai_cmd_kernel(1, argv_stop, opt);
-}
-
 static int is_help_arg(const char *a)
 {
     return a && (strcmp(a, "-h") == 0 || strcmp(a, "--help") == 0 || strcmp(a, "help") == 0);
@@ -117,18 +118,64 @@ static int is_help_arg(const char *a)
 static void up_usage(void)
 {
     printf("Usage:\n");
-    printf("  yai up [--ws <id>] [--ws-id <id>] [--workspace <id>] [--detach] [--allow-degraded]\n");
+    printf("  yai up [--ws <id>] [--detach] [--allow-degraded]\n");
 }
 
 static void down_usage(void)
 {
     printf("Usage:\n");
-    printf("  yai down [--ws <id>] [--ws-id <id>] [--workspace <id>] [--force]\n");
+    printf("  yai down [--ws <id>] [--force]\n");
 }
 
-int yai_cmd_up(int argc, char **argv, const yai_cli_opts_t *opt)
+static int kernel_stop_via_rpc(void)
 {
-    const char *ws = (opt && opt->ws_id && opt->ws_id[0]) ? opt->ws_id : "dev";
+    yai_rpc_client_t c;
+    if (yai_rpc_connect(&c, "system") != 0) {
+        fprintf(stderr, "ERR: cannot connect to root plane\n");
+        return -1;
+    }
+
+    yai_rpc_set_authority(&c, 1, "operator");
+
+    if (yai_rpc_handshake(&c) != 0) {
+        fprintf(stderr, "ERR: handshake failed\n");
+        yai_rpc_close(&c);
+        return -2;
+    }
+
+    const char *payload = "{\"method\":\"stop\",\"params\":{}}";
+
+    char response[YAI_CLI_RPC_RESP_MAX];
+    uint32_t resp_len = 0;
+
+    int rc = yai_rpc_call_raw(
+        &c,
+        (uint32_t)YAI_CMD_CONTROL,
+        payload,
+        (uint32_t)strlen(payload),
+        response,
+        sizeof(response) - 1,
+        &resp_len
+    );
+
+    if (rc == 0) {
+        response[resp_len] = '\0';
+        /* stop is side-effecty; printing is optional */
+        /* printf("%s\n", response); */
+    } else {
+        fprintf(stderr, "ERR: kernel stop RPC failed (%d)\n", rc);
+    }
+
+    yai_rpc_close(&c);
+    return rc;
+}
+
+/* -----------------------------------------
+ * yai up
+ * ----------------------------------------- */
+int yai_ops_lifecycle_up(int argc, char **argv)
+{
+    const char *ws = "dev";
     int detach = 0;
     int allow_degraded = 0;
 
@@ -139,25 +186,21 @@ int yai_cmd_up(int argc, char **argv, const yai_cli_opts_t *opt)
             return 0;
         }
         if (!a) continue;
+
         if ((strcmp(a, "--ws") == 0 || strcmp(a, "--ws-id") == 0 || strcmp(a, "--workspace") == 0) && i + 1 < argc) {
             ws = argv[++i];
             continue;
         }
-        if (strcmp(a, "--detach") == 0) {
-            detach = 1;
+        if (strcmp(a, "--detach") == 0) { detach = 1; continue; }
+        if (strcmp(a, "--allow-degraded") == 0) { allow_degraded = 1; continue; }
+
+        /* ignore old/legacy flags silently */
+        if (strcmp(a, "--build") == 0 || strcmp(a, "--ai") == 0 ||
+            strcmp(a, "--no-engine") == 0 || strcmp(a, "--no-mind") == 0) {
             continue;
         }
-        if (strcmp(a, "--allow-degraded") == 0) {
-            allow_degraded = 1;
-            continue;
-        }
-        if (strcmp(a, "--build") == 0 || strcmp(a, "--ai") == 0 || strcmp(a, "--no-engine") == 0 || strcmp(a, "--no-mind") == 0) {
-            continue;
-        }
-        if (strcmp(a, "--timeout-ms") == 0 && i + 1 < argc) {
-            i++;
-            continue;
-        }
+        if (strcmp(a, "--timeout-ms") == 0 && i + 1 < argc) { i++; continue; }
+
         fprintf(stderr, "ERR: unknown option: %s\n", a);
         up_usage();
         return 2;
@@ -193,9 +236,13 @@ int yai_cmd_up(int argc, char **argv, const yai_cli_opts_t *opt)
 
     char cmd2[1024];
     if (allow_degraded) {
-        snprintf(cmd2, sizeof(cmd2), "YAI_ENGINE_ALLOW_DEGRADED=1 %s %s >/tmp/yai_cli_engine.log 2>&1 %s", engine_bin, ws, detach ? "&" : "");
+        snprintf(cmd2, sizeof(cmd2),
+                 "YAI_ENGINE_ALLOW_DEGRADED=1 %s %s >/tmp/yai_cli_engine.log 2>&1 %s",
+                 engine_bin, ws, detach ? "&" : "");
     } else {
-        snprintf(cmd2, sizeof(cmd2), "%s %s >/tmp/yai_cli_engine.log 2>&1 %s", engine_bin, ws, detach ? "&" : "");
+        snprintf(cmd2, sizeof(cmd2),
+                 "%s %s >/tmp/yai_cli_engine.log 2>&1 %s",
+                 engine_bin, ws, detach ? "&" : "");
     }
 
     if (system(cmd2) != 0) {
@@ -207,38 +254,30 @@ int yai_cmd_up(int argc, char **argv, const yai_cli_opts_t *opt)
     return 0;
 }
 
-int yai_cmd_down(int argc, char **argv, const yai_cli_opts_t *opt)
+/* -----------------------------------------
+ * yai down
+ * ----------------------------------------- */
+int yai_ops_lifecycle_down(int argc, char **argv)
 {
-    (void)opt;
     int force = 0;
 
     for (int i = 0; i < argc; i++) {
         const char *a = argv[i];
-        if (is_help_arg(a)) {
-            down_usage();
-            return 0;
-        }
+        if (is_help_arg(a)) { down_usage(); return 0; }
         if (!a) continue;
-        if (strcmp(a, "--force") == 0) {
-            force = 1;
-            continue;
-        }
+
+        if (strcmp(a, "--force") == 0) { force = 1; continue; }
         if ((strcmp(a, "--ws") == 0 || strcmp(a, "--ws-id") == 0 || strcmp(a, "--workspace") == 0) && i + 1 < argc) {
-            i++;
-            continue;
+            i++; continue;
         }
+
         fprintf(stderr, "ERR: unknown option: %s\n", a);
         down_usage();
         return 2;
     }
 
     if (!force) {
-        yai_cli_opts_t stop_opt = {0};
-        stop_opt.arming = 1;
-        stop_opt.role = "operator";
-        stop_opt.client_version = "yai-cli/1.0";
-
-        int rc = run_kernel_stop(&stop_opt);
+        int rc = kernel_stop_via_rpc();
         if (rc != 0) {
             fprintf(stderr, "ERR: kernel stop failed (%d). Use --force to continue cleanup.\n", rc);
             return rc;
@@ -256,6 +295,7 @@ int yai_cmd_down(int argc, char **argv, const yai_cli_opts_t *opt)
     if (yai_path_root_sock(root_sock, sizeof(root_sock)) == 0) {
         unlink(root_sock);
     }
+
     const char *home = getenv("HOME");
     if (home && home[0]) {
         char kernel_sock[512];
@@ -268,4 +308,18 @@ int yai_cmd_down(int argc, char **argv, const yai_cli_opts_t *opt)
 
     printf("{\"ok\":true,\"mode\":\"down\"}\n");
     return 0;
+}
+
+/* -----------------------------------------
+ * yai restart  (simple: down --force + up)
+ * ----------------------------------------- */
+int yai_ops_lifecycle_restart(int argc, char **argv)
+{
+    (void)argc; (void)argv;
+    /* minimal semantics; you can refine later */
+    char *down_argv[] = { "--force", NULL };
+    (void)yai_ops_lifecycle_down(1, down_argv);
+
+    char *up_argv[] = { NULL };
+    return yai_ops_lifecycle_up(0, up_argv);
 }

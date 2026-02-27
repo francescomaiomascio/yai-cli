@@ -28,9 +28,6 @@ int yai_ops_control_chat(int argc, char** argv);
 int yai_ops_control_shell(int argc, char** argv);
 int yai_ops_control_dsar(int argc, char** argv);
 
-// Memory
-int yai_ops_memory_graph(int argc, char** argv);
-int yai_ops_memory_embed(int argc, char** argv);
 
 #ifdef __cplusplus
 }

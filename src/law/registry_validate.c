@@ -19,7 +19,6 @@ static int validate_args(const yai_law_command_t* c) {
     const yai_law_arg_t* a = &c->args[i];
     if (!a->name || !a->type) return 10;
     if (a->pos < 0) return 11;
-    if (a->pos > 0 && a->pos < 1) return 12;
     if (a->values_len > 0 && (!a->values)) return 13;
   }
   return 0;

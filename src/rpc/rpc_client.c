@@ -71,7 +71,6 @@ static int is_valid_ws_id(const char *ws_id)
     if (ws_id[0] == '~') return 0;
     if (strstr(ws_id, "..")) return 0;
 
-    /* keep it conservative; porcelain can enforce a richer grammar */
     return 1;
 }
 
@@ -193,7 +192,7 @@ int yai_rpc_call_raw(
     env.role        = c->role;
     env.arming      = c->arming;
 
-    /* checksum is currently unused / reserved; keep deterministic */
+    /* reserved; keep deterministic */
     env.checksum    = 0;
 
     snprintf(env.ws_id, sizeof(env.ws_id), "%s", c->ws_id);

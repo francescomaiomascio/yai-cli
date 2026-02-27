@@ -1,26 +1,16 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-// src/main.c
 
 #include <yai_cli/porcelain/porcelain.h>
 
 #include <stdio.h>
 
-#ifndef YAI_CLI_VERSION
-#define YAI_CLI_VERSION "yai-cli/1.0"
-#endif
-
 int main(int argc, char **argv)
 {
-    (void)argv;
-
-    /* Keep main minimal: porcelain owns parsing, registry lookup, help, errors. */
-    if (argc == 2) {
-        /* Extremely lightweight convenience, so `yai --version` works even
-           before registry is loaded (useful during bring-up / broken deps). */
-        if (argv[1] && (strcmp(argv[1], "-V") == 0 || strcmp(argv[1], "--version") == 0)) {
-            printf("%s\n", YAI_CLI_VERSION);
-            return 0;
-        }
+    if (argc <= 1) {
+        // porcelain gestisce help/usage; qui evitiamo exit 1 “muto”
+        // e lasciamo che la UX sia unica.
+        const char *fallback_argv[] = {"yai", "help", NULL};
+        return yai_porcelain_run(2, (char**)fallback_argv);
     }
 
     return yai_porcelain_run(argc, argv);
