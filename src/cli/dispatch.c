@@ -1,37 +1,40 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-// tools/cli/src/cmd_dispatch.c
 
-#include <yai_cli/cmd.h>
+#include <yai_cli/cmd.h>   // keeps ABI stable for now (yai_cmd_dispatch signature)
 #include <yai_cli/fmt.h>
 
+#include <yai_cli/porcelain/porcelain.h>
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /*
- * Central Sovereign Dispatcher
+ * Central Sovereign Dispatcher (v1: registry-driven)
  *
- * Routing rules:
- *  - root   → L1 machine plane
- *  - kernel → L1 machine plane (global control)
- *  - engine → L2 (requires --ws)
- *  - mind   → L3 (requires --ws)
- *  - law    → local
+ * Old world: hand-coded routing (root/kernel/engine/mind/law).
+ * New world: porcelain + law registry decide what a command is,
+ *            then ops_dispatch routes by canonical command id.
+ *
+ * This function remains as a compatibility shim because src/main.c calls it.
  */
 
 static void usage_global(void)
 {
     fprintf(stderr,
         "YAI Sovereign CLI\n"
-        "\nUsage:\n"
-        "  yai up     [--ws <id>] [--detach] [--allow-degraded]\n"
-        "  yai down   [--ws <id>] [--force]\n"
-        "  yai status [--ws <id>] [--json]\n"
-        "  yai doctor [--ws <id>] [--json]\n"
-        "  yai root   <status|ping>\n"
-        "  yai kernel <status|ping|stop|ws>\n"
-        "  yai engine --ws <id> <gate> <method> [params]\n"
-        "  yai mind   --ws <id> <chat|think|query> <prompt>\n"
-        "  yai law    <check|tree|status>\n"
+        "\n"
+        "Usage:\n"
+        "  yai <command> [args]\n"
+        "\n"
+        "Try:\n"
+        "  yai help\n"
+        "  yai help --all\n"
+        "  yai help <group>\n"
+        "  yai help <command>\n"
+        "\n"
+        "This CLI is registry-driven. Canonical command set is loaded from:\n"
+        "  deps/yai-law/law/abi/registry/commands.v1.json\n"
     );
 }
 
@@ -42,72 +45,42 @@ int yai_cmd_dispatch(
     const yai_cli_opts_t *opt
 )
 {
+    (void)opt; // porcelain re-parses args for now (can be threaded later)
+
+    // In existing main.c calls, `binary` is the *target command token* (e.g. "status"),
+    // and `argv` is the remaining tail. We rebuild a "normal main()" argv vector.
     if (!binary || !binary[0]) {
         usage_global();
         return 2;
     }
 
-    /* ---------------- ORCHESTRATOR ---------------- */
-
-    if (strcmp(binary, "up") == 0)
-        return yai_cmd_up(argc, argv, opt);
-
-    if (strcmp(binary, "down") == 0)
-        return yai_cmd_down(argc, argv, opt);
-
-    /* ---------------- STATUS / DOCTOR ---------------- */
-
-
-    if (strcmp(binary, "status") == 0)
-        return yai_cmd_status(argc, argv, opt);
-
-    if (strcmp(binary, "doctor") == 0)
-        return yai_cmd_doctor(argc, argv, opt);
-
-    /* ---------------- ROOT ---------------- */
-
-    if (strcmp(binary, "root") == 0)
-        return yai_cmd_root(argc, argv, opt);
-
-    /* ---------------- KERNEL ---------------- */
-
-    if (strcmp(binary, "kernel") == 0) {
-        if (argc > 0 && strcmp(argv[0], "ws") == 0)
-            return yai_cmd_ws(argc - 1, argv + 1, opt);
-
-        return yai_cmd_kernel(argc, argv, opt);
+    // Build: ["yai", binary, argv...]
+    int full_argc = argc + 2;
+    char **full_argv = (char**)calloc((size_t)full_argc + 1, sizeof(char*));
+    if (!full_argv) {
+        fprintf(stderr, "FATAL: out of memory\n");
+        return 1;
     }
 
-    /* ---------------- ENGINE ---------------- */
+    full_argv[0] = (char*)"yai";
+    full_argv[1] = (char*)binary;
+    for (int i = 0; i < argc; i++) {
+        full_argv[i + 2] = argv[i];
+    }
+    full_argv[full_argc] = NULL;
 
-    if (strcmp(binary, "engine") == 0) {
-        if (!opt || !opt->ws_id || !opt->ws_id[0]) {
-            fprintf(stderr,
-                "FATAL: 'engine' requires --ws <id>\n");
-            return 3;
-        }
-        return yai_cmd_engine(argc, argv, opt);
+    // registry-driven execution
+    int rc = yai_porcelain_run(full_argc, full_argv);
+
+    // If porcelain returns a "usage-like" code, print a minimal global usage too.
+    if (rc == 2) {
+        // avoid double-noise: porcelain likely printed command-specific help
+        // but global usage is still useful when entrypoint token is unknown.
+        // Keep it short.
+        // (If you prefer: remove this block.)
+        // usage_global();
     }
 
-    /* ---------------- MIND ---------------- */
-
-    if (strcmp(binary, "mind") == 0) {
-        if (!opt || !opt->ws_id || !opt->ws_id[0]) {
-            fprintf(stderr,
-                "FATAL: 'mind' requires --ws <id>\n");
-            return 3;
-        }
-        return yai_cmd_mind(argc, argv, opt);
-    }
-
-    /* ---------------- LAW ---------------- */
-
-    if (strcmp(binary, "law") == 0)
-        return yai_cmd_law(argc, argv, opt);
-
-    /* ---------------- UNKNOWN ---------------- */
-
-    fprintf(stderr, "ERR: Unknown target: %s\n", binary);
-    usage_global();
-    return 2;
+    free(full_argv);
+    return rc;
 }
