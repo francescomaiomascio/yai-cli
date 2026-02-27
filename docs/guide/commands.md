@@ -3,10 +3,10 @@
 ## Source of Truth
 
 The command source of truth is:
-- `deps/yai-specs/specs/cli/schema/commands.v1.json`
+- `deps/yai-law/law/abi/registry/commands.v1.json`
 
 The associated schema is:
-- `deps/yai-specs/specs/cli/schema/commands.schema.json`
+- `deps/yai-law/law/abi/schema/commands.v1.schema.json`
 
 ## How to read it
 

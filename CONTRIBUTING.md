@@ -22,4 +22,4 @@ Change C/H/tests only when explicitly requested by the task.
 Before opening a PR:
 - local build (`make`)
 - verify the working tree does not include unwanted artifacts
-- verify alignment with `deps/yai-specs`
+- verify alignment with `deps/yai-law`

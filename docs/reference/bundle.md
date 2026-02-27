@@ -8,7 +8,7 @@ Goal: distribute a coherent set of binaries + specs with zero drift.
 ## Layout (current)
 
 - CLI bin: `dist/bin/yai-cli`
-- Specs pinned: `deps/yai-specs/`
+- Specs pinned: `deps/yai-law/`
 
 ## Runtime Bundle (future mention)
 
