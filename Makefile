@@ -56,7 +56,8 @@ SRCS := \
     src/ops/commands/root.c \
     src/ops/commands/status.c \
     src/ops/commands/verify.c \
-    src/ops/commands/workspace.c
+    src/ops/commands/workspace.c\
+	src/ops/commands/control_stubs.c \
 
 OBJS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 

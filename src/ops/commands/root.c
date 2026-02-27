@@ -1,4 +1,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
+// src/ops/commands/root.c
+
 #define _POSIX_C_SOURCE 200809L
 
 #include <yai_cli/ops/ops.h>
@@ -9,6 +11,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+
+enum { YAI_CLI_RPC_RESP_MAX = 4096 };
 
 static void usage_root(void)
 {
@@ -49,12 +53,12 @@ static int root_ping(void)
     if (root_connect_and_handshake(&c) != 0)
         return 3;
 
-    char response[YAI_RPC_LINE_MAX];
+    char response[YAI_CLI_RPC_RESP_MAX];
     uint32_t resp_len = 0;
 
     int rc = yai_rpc_call_raw(
         &c,
-        YAI_CMD_PING,
+        (uint32_t)YAI_CMD_PING,
         NULL,
         0,
         response,
@@ -76,7 +80,7 @@ static int root_ping(void)
 }
 
 /* ============================================================
-   OPS ENTRYPOINT (new world)
+   OPS ENTRYPOINT
    ============================================================ */
 
 int yai_ops_control_root(int argc, char **argv)

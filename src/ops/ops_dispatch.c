@@ -33,10 +33,8 @@ static const yai_ops_map_t kOpsMap[] = {
   {"yai.control.chat",       yai_ops_control_chat},
   {"yai.control.shell",      yai_ops_control_shell},
   {"yai.control.dsar",       yai_ops_control_dsar},
+  {"yai.control.workspace",  yai_ops_control_workspace},
 
-  // memory
-  {"yai.memory.graph",       yai_ops_memory_graph},
-  {"yai.memory.embed",       yai_ops_memory_embed},
 };
 
 int yai_ops_dispatch_by_id(const char* command_id, int argc, char** argv) {

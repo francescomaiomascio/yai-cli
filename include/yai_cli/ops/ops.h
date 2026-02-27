@@ -27,7 +27,7 @@ int yai_ops_control_providers(int argc, char** argv);
 int yai_ops_control_chat(int argc, char** argv);
 int yai_ops_control_shell(int argc, char** argv);
 int yai_ops_control_dsar(int argc, char** argv);
-
+int yai_ops_control_workspace(int argc, char** argv);
 
 #ifdef __cplusplus
 }
