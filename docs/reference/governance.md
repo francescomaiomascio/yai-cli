@@ -9,4 +9,4 @@
 
 ## Contract Discipline
 
-When behavior depends on contract changes, coordinate with `yai-specs` and document compatibility impact.
+When behavior depends on contract changes, coordinate with `yai-law` and document compatibility impact.

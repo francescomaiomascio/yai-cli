@@ -17,16 +17,16 @@ TARGET := $(BIN_DIR)/yai
 LEGACY_TARGET := $(BIN_DIR)/yai-cli
 
 # ---- Specs (submodule) ----
-SPECS_DIR := $(ROOT_DIR)/deps/yai-specs
-SPECS_INC_PROTOCOL := $(SPECS_DIR)/specs/protocol/include
-SPECS_INC_VAULT := $(SPECS_DIR)/specs/vault/include
-SPECS_INC_RUNTIME := $(SPECS_DIR)/specs/protocol/runtime/include
+LAW_DIR := 20 20 101 12 61 79 80 81 98 702 701 33 100 204 250 395 398 399 400ROOT_DIR)/deps/yai-law
+LAW_INC_PROTOCOL := 20 20 101 12 61 79 80 81 98 702 701 33 100 204 250 395 398 399 400LAW_DIR)/law/surfaces/protocol/include
+LAW_INC_VAULT := 20 20 101 12 61 79 80 81 98 702 701 33 100 204 250 395 398 399 400LAW_DIR)/law/surfaces/vault/include
+LAW_INC_RUNTIME := 20 20 101 12 61 79 80 81 98 702 701 33 100 204 250 395 398 399 400LAW_DIR)/law/surfaces/protocol/runtime/include
 
 # ---- Flags ----
 CFLAGS ?= -Wall -Wextra -O2 -std=c11 -MMD -MP
 CFLAGS += -I$(ROOT_DIR)/include
-CFLAGS += -I$(SPECS_DIR)
-CFLAGS += -I$(SPECS_INC_PROTOCOL) -I$(SPECS_INC_VAULT) -I$(SPECS_INC_RUNTIME)
+CFLAGS += -I$((LAW_DIR))
+CFLAGS += -I$(LAW_INC_PROTOCOL) -I$(LAW_INC_VAULT) -I$(LAW_INC_RUNTIME)
 
 LDFLAGS ?=
 

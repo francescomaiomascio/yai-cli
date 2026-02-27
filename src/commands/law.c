@@ -22,11 +22,11 @@ typedef struct {
 } law_req_t;
 
 static const law_req_t REQ[] = {
-    { "specs/control/schema/control_plane.v1.json", 0 },
-    { "specs/control/schema/authority.json",        0 },
-    { "specs/protocol/include/protocol.h",          0 },
-    { "specs/protocol/include/transport.h",         0 },
-    { "specs/protocol/include/yai_protocol_ids.h",  0 },
+    { "law/surfaces/control/schema/control_plane.v1.json", 0 },
+    { "law/surfaces/control/schema/authority.json",        0 },
+    { "law/surfaces/protocol/include/protocol.h",          0 },
+    { "law/surfaces/protocol/include/transport.h",         0 },
+    { "law/surfaces/protocol/include/yai_protocol_ids.h",  0 },
     { NULL, 0 }
 };
 
@@ -55,7 +55,7 @@ static int find_specs_root(char *out, size_t cap) {
         NULL
     };
     static const char *ROOTS[] = {
-        "deps/yai-specs",
+        "deps/yai-law",
         "contracts",
         NULL
     };
@@ -129,10 +129,10 @@ static int cmd_check(void) {
 }
 
 static int cmd_tree(void) {
-    puts("specs/ (resolved by YAI_SPECS_DIR or repo fallbacks)");
-    puts("└── [deps/yai-specs | contracts]/");
-    puts("    ├── specs/control/schema/");
-    puts("    ├── specs/protocol/include/");
+    puts("law/ (resolved by YAI_LAW_DIR or repo fallbacks)");
+    puts("└── [deps/yai-law | contracts]/");
+    puts("    ├── law/surfaces/control/schema/");
+    puts("    ├── law/surfaces/protocol/include/");
     puts("    └── ...");
     return 0;
 }

@@ -31,9 +31,9 @@ The CLI follows the contracts. If the contract changes, the CLI updates with it.
 
 The CLI is governed by pinned law:
 
-- Canonical command set: `deps/yai-law/specs/cli/schema/commands.v1.json`
-- Canonical schema: `deps/yai-law/specs/cli/schema/commands.schema.json`
-- Protocol envelope + IDs: `deps/yai-law/specs/protocol/include/*`
+- Canonical command set: `deps/yai-law/law/abi/registry/commands.v1.json`
+- Canonical schema: `deps/yai-law/law/abi/schema/commands.v1.schema.json`
+- Protocol envelope + IDs: `deps/yai-law/law/surfaces/protocol/include/*`
 
 If behavior drifts from the pinned law, it's a bug. Fix the implementation - do not "work around" it.
 

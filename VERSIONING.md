@@ -12,7 +12,7 @@ Public release baseline: `v0.1.0` (2026-02-17).
 
 ## Specs Coordination
 
-Each CLI release must be evaluated against the pinned `deps/yai-specs` revision.
+Each CLI release must be evaluated against the pinned `deps/yai-law` revision.
 Contract-breaking changes require a MAJOR bump or an explicit compatibility range update.
 
 Current contract line: `SPECS_API_VERSION=v1`.

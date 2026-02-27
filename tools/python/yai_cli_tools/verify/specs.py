@@ -7,9 +7,9 @@ from yai_cli_tools.util import ok, fail, repo_root
 
 def run() -> int:
     root = repo_root()
-    specs = root / "deps/yai-specs"
+    specs = root / "deps/yai-law"
     if not specs.exists():
-        return fail("deps/yai-specs not found")
+        return fail("deps/yai-law not found")
 
     res = subprocess.run(
         ["git", "status", "--porcelain"],
@@ -19,9 +19,9 @@ def run() -> int:
         text=True,
     )
     if res.returncode != 0:
-        return fail("cannot read git status in deps/yai-specs")
+        return fail("cannot read git status in deps/yai-law")
     if res.stdout.strip():
-        return fail("deps/yai-specs is dirty")
+        return fail("deps/yai-law is dirty")
 
     ok("specs pin is present and clean")
     return 0

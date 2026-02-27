@@ -9,4 +9,4 @@ Quick links:
 - `docs/COMMANDS.md`
 
 Normative note:
-If CLI behavior disagrees with `yai-specs`, the CLI is wrong.
+If CLI behavior disagrees with `yai-law`, the CLI is wrong.

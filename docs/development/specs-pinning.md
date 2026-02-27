@@ -2,7 +2,7 @@
 
 ## Rule 1: Explicit pin
 
-`deps/yai-specs` is a pin (commit or tag), not a floating reference.
+`deps/yai-law` is a pin (commit or tag), not a floating reference.
 
 ## Rule 2: Declared compatibility
 
@@ -11,5 +11,5 @@ Reference: `COMPATIBILITY.md`.
 
 ## Rule 3: No drift
 
-If `yai-specs` changes, `yai-cli` must adapt.
+If `yai-law` changes, `yai-cli` must adapt.
 Out-of-contract behavior is not acceptable.

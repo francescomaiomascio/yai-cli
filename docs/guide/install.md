@@ -8,7 +8,7 @@ Output target: `dist/bin/yai-cli`.
 ## Runtime Prerequisites
 
 - Compatible C toolchain
-- Pinned `deps/yai-specs` available
+- Pinned `deps/yai-law` available
 
 ## Verification
 
