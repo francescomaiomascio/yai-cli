@@ -125,7 +125,11 @@ static int find_command_start(int argc, char** argv) {
     /* stop at first non-option */
     if (!is_global_option(t)) break;
 
-    /* help/version handled outside; here we just advance deterministically */
+    /* help/version handled outside; do not treat as value-taking globals */
+    if (strcmp(t, "--help") == 0 || strcmp(t, "-h") == 0 || strcmp(t, "--version") == 0) {
+      break; /* command token starts here */
+    }
+
     if (global_option_takes_value(t)) {
       if (i + 1 >= argc) return -1; /* missing value */
       i += 2;
