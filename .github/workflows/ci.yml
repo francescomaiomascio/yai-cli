@@ -1,4 +1,4 @@
-name: ci
+name: CI
 
 on:
   pull_request:
@@ -6,21 +6,32 @@ on:
     branches: [main]
 
 jobs:
+  # 1. ARCHITECTURAL GATE
+  # Fast check to ensure the workspace isn't polluted with nested laws
+  audit:
+    uses: yai-labs/yai-infra/.github/workflows/audit-integrity.yml@main
+    secrets: inherit
+
+  # 2. FULL VERIFICATION
   verify:
+    needs: audit
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: recursive # Changed to recursive to ensure we see nested deps to audit them
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install docs dependency
-        run: sudo apt-get update && sudo apt-get install -y doxygen
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update 
+          sudo apt-get install -y doxygen build-essential gcc make
 
       - name: Verify (toolchain)
+        # This now runs knowing that yai-law is unique and correctly mapped
         run: ./tools/bin/yai-cli-verify --profile ci
