@@ -16,7 +16,9 @@ typedef struct yai_law_arg {
   const char** values;  // enum values (optional)
   size_t      values_len;
   int         required; // 0/1
-  const char* default_s;// optional string default
+
+  // Defaults: support string/bool/int (extend as needed)
+  const char* default_s;    // optional string default
   int         default_b_set;
   int         default_b;
   int         default_i_set;
@@ -25,7 +27,7 @@ typedef struct yai_law_arg {
 
 typedef struct yai_law_artifact_io {
   const char* role;       // "bundle_manifest"
-  const char* schema_ref; // "law/abi/artifacts-schema/....schema.json" (optional, can be NULL)
+  const char* schema_ref; // "schema/....schema.json" (optional, can be NULL)
   const char* path_hint;  // "bundle/**" (optional)
 } yai_law_artifact_io_t;
 
@@ -34,6 +36,21 @@ typedef struct yai_law_command {
   const char* name;     // "verify"
   const char* group;    // "verify"
   const char* summary;  // short
+
+  // NEW: alias tokens for "<group> <name>" resolution and UX shortcuts
+  // Example: aliases ["root", "control-root"] etc. (implementation decides meaning)
+  const char** aliases;   // optional
+  size_t       aliases_len;
+
+  // NEW: deprecation metadata
+  int          deprecated;    // 0/1
+  const char*  replaced_by;   // "yai.root.ping" (optional, required if deprecated=1)
+
+  // NEW: lifecycle markers (optional strings; keep them opaque)
+  // Examples: "0.1.0", "2026-02-28", etc.
+  const char* since; // optional
+  const char* until; // optional
+
   const yai_law_arg_t* args;
   size_t args_len;
 
@@ -62,6 +79,20 @@ typedef struct yai_law_command {
   size_t consumes_artifacts_len;
 } yai_law_command_t;
 
+// Optional grouping layer for help UX (help --sets, curated lists)
+typedef struct yai_law_command_set_item {
+  const char* command; // canonical id "yai.<group>.<name>"
+  const char* label;   // optional display label
+} yai_law_command_set_item_t;
+
+typedef struct yai_law_command_set {
+  const char* id;          // "core", "ops", "governance", etc.
+  const char* title;       // human name
+  const char* description; // optional
+  const yai_law_command_set_item_t* items;
+  size_t items_len;
+} yai_law_command_set_t;
+
 typedef struct yai_law_artifact_role {
   const char* role;
   const char* schema_ref;
@@ -71,6 +102,10 @@ typedef struct yai_law_artifact_role {
 typedef struct yai_law_registry {
   const char* version; // commands.json "version" string (optional)
   const char* binary;  // "yai" (optional)
+
+  // NEW: curated help sets (optional)
+  const yai_law_command_set_t* command_sets;
+  size_t command_sets_len;
 
   const yai_law_command_t* commands;
   size_t commands_len;

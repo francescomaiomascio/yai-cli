@@ -9,15 +9,20 @@ extern "C" {
 
 typedef struct yai_law_paths {
   char* law_dir;                 // .../deps/yai-law
-  char* registry_primitives;     // .../law/abi/registry/primitives.v1.json
-  char* registry_commands;       // .../law/abi/registry/commands.v1.json
-  char* registry_artifacts;      // .../law/abi/registry/artifacts.v1.json
 
-  char* schema_primitives;       // .../law/abi/schema/primitives.v1.schema.json
-  char* schema_commands;         // .../law/abi/schema/commands.v1.schema.json
-  char* schema_artifacts;        // .../law/abi/schema/artifacts.v1.schema.json
+  // registries (new yai-law layout)
+  char* registry_primitives;     // .../registry/primitives.v1.json
+  char* registry_commands;       // .../registry/commands.v1.json
+  char* registry_artifacts;      // .../registry/artifacts.v1.json
 
-  char* artifacts_schema_dir;    // .../law/abi/artifacts-schema
+  // schemas (new yai-law layout)
+  char* schema_primitives;       // .../registry/schema/primitives.v1.schema.json
+  char* schema_commands;         // .../registry/schema/commands.v1.schema.json
+  char* schema_artifacts;        // .../registry/schema/artifacts.v1.schema.json
+
+  // schema dir for artifacts payloads (optional; keep for future)
+  // NOTE: if you don’t have a dedicated dir in yai-law yet, you can point to registry/schema
+  char* artifacts_schema_dir;    // .../registry/schema
 } yai_law_paths_t;
 
 // Initialize by resolving deps/yai-law.

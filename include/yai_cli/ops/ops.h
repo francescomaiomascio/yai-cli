@@ -32,3 +32,18 @@ int yai_ops_control_workspace(int argc, char** argv);
 #ifdef __cplusplus
 }
 #endif
+
+// Exit codes (must match registry defaults)
+enum {
+  YAI_EXIT_OK = 0,
+  YAI_EXIT_GENERIC_FAILURE = 1,
+  YAI_EXIT_INVALID_ARGS = 2,
+  YAI_EXIT_DEPENDENCY_MISSING = 3,
+  YAI_EXIT_RUNTIME_NOT_READY = 4,
+};
+
+static inline int yai_ops_exit_normalize(int rc) {
+  // never return negatives to the shell
+  if (rc < 0) return YAI_EXIT_GENERIC_FAILURE;
+  return rc;
+}

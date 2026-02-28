@@ -26,11 +26,14 @@ static void yai_free0(char** p) {
   }
 }
 
-static int yai_exists_dir(const char* path) {
+static int yai_exists_path(const char* path) {
   if (!path || !path[0]) return 0;
-  // best-effort: if access OK assume it exists; dir-ness checked later if needed
   return access(path, F_OK) == 0;
 }
+
+// Best-effort: access() only. Good enough for now.
+static int yai_exists_dir(const char* path) { return yai_exists_path(path); }
+static int yai_exists_file(const char* path) { return yai_exists_path(path); }
 
 static char* yai_strdup0(const char* s) {
   if (!s) return NULL;
@@ -64,7 +67,6 @@ static char* yai_dirname_dup(const char* path) {
   size_t n = strlen(path);
   if (n == 0) return NULL;
 
-  // copy to mutate
   char* tmp = yai_strdup0(path);
   if (!tmp) return NULL;
 
@@ -76,14 +78,12 @@ static char* yai_dirname_dup(const char* path) {
 
   char* slash = strrchr(tmp, '/');
   if (!slash) {
-    // no slash -> "."
     free(tmp);
     return yai_strdup0(".");
   }
 
-  // root "/"
   if (slash == tmp) {
-    slash[1] = 0;
+    slash[1] = 0; // "/"
     return tmp;
   }
 
@@ -111,7 +111,7 @@ static char* yai_find_law_dir_from(const char* start_dir) {
 
     if (yai_exists_dir(candidate)) {
       free(cur);
-      return candidate; // already malloc'd
+      return candidate; // malloc'd
     }
 
     free(candidate);
@@ -123,7 +123,6 @@ static char* yai_find_law_dir_from(const char* start_dir) {
       return NULL;
     }
 
-    // If no progress, stop.
     if (strcmp(parent, cur) == 0) {
       free(parent);
       free(cur);
@@ -137,9 +136,7 @@ static char* yai_find_law_dir_from(const char* start_dir) {
 
 // ---------------------------- API ----------------------------
 
-static void yai_law_paths_zero(yai_law_paths_t* p) {
-  memset(p, 0, sizeof(*p));
-}
+static void yai_law_paths_zero(yai_law_paths_t* p) { memset(p, 0, sizeof(*p)); }
 
 static void yai_law_paths_release(yai_law_paths_t* p) {
   yai_free0(&p->law_dir);
@@ -159,9 +156,7 @@ int yai_law_paths_init(yai_law_paths_t* out, const char* repo_root_hint) {
   // 1) env override
   const char* env = getenv("YAI_LAW_DIR");
   if (env && env[0]) {
-    if (!yai_exists_dir(env)) {
-      return ENOENT;
-    }
+    if (!yai_exists_dir(env)) return ENOENT;
     out->law_dir = yai_strdup0(env);
     if (!out->law_dir) return ENOMEM;
   }
@@ -171,7 +166,7 @@ int yai_law_paths_init(yai_law_paths_t* out, const char* repo_root_hint) {
     char* cand = yai_path_join2(repo_root_hint, "deps/yai-law");
     if (!cand) return ENOMEM;
     if (yai_exists_dir(cand)) {
-      out->law_dir = cand; // take ownership
+      out->law_dir = cand;
     } else {
       free(cand);
     }
@@ -187,22 +182,21 @@ int yai_law_paths_init(yai_law_paths_t* out, const char* repo_root_hint) {
     out->law_dir = found;
   }
 
-  // Build canonical paths under yai-law
-  // law/abi/registry/*.json
+  // Build canonical paths under yai-law (NEW layout)
   char* law_dir = out->law_dir;
 
   // registries
-  out->registry_primitives = yai_path_join2(law_dir, "law/abi/registry/primitives.v1.json");
-  out->registry_commands   = yai_path_join2(law_dir, "law/abi/registry/commands.v1.json");
-  out->registry_artifacts  = yai_path_join2(law_dir, "law/abi/registry/artifacts.v1.json");
+  out->registry_primitives = yai_path_join2(law_dir, "registry/primitives.v1.json");
+  out->registry_commands   = yai_path_join2(law_dir, "registry/commands.v1.json");
+  out->registry_artifacts  = yai_path_join2(law_dir, "registry/artifacts.v1.json");
 
   // schemas
-  out->schema_primitives   = yai_path_join2(law_dir, "law/abi/schema/primitives.v1.schema.json");
-  out->schema_commands     = yai_path_join2(law_dir, "law/abi/schema/commands.v1.schema.json");
-  out->schema_artifacts    = yai_path_join2(law_dir, "law/abi/schema/artifacts.v1.schema.json");
+  out->schema_primitives   = yai_path_join2(law_dir, "registry/schema/primitives.v1.schema.json");
+  out->schema_commands     = yai_path_join2(law_dir, "registry/schema/commands.v1.schema.json");
+  out->schema_artifacts    = yai_path_join2(law_dir, "registry/schema/artifacts.v1.schema.json");
 
-  // artifacts-schema dir
-  out->artifacts_schema_dir = yai_path_join2(law_dir, "law/abi/artifacts-schema");
+  // “schema dir” (used as a base dir for schema refs / future)
+  out->artifacts_schema_dir = yai_path_join2(law_dir, "registry/schema");
 
   if (!out->registry_primitives || !out->registry_commands || !out->registry_artifacts ||
       !out->schema_primitives || !out->schema_commands || !out->schema_artifacts ||
@@ -211,14 +205,13 @@ int yai_law_paths_init(yai_law_paths_t* out, const char* repo_root_hint) {
     return ENOMEM;
   }
 
-  // Optional existence checks for the “must-have” files.
-  // Fail-fast: if law_dir exists but required files are missing -> ENOENT.
-  if (!yai_exists_dir(out->registry_primitives) ||
-      !yai_exists_dir(out->registry_commands) ||
-      !yai_exists_dir(out->registry_artifacts) ||
-      !yai_exists_dir(out->schema_primitives) ||
-      !yai_exists_dir(out->schema_commands) ||
-      !yai_exists_dir(out->schema_artifacts) ||
+  // Fail-fast: required files/dirs must exist
+  if (!yai_exists_file(out->registry_primitives) ||
+      !yai_exists_file(out->registry_commands) ||
+      !yai_exists_file(out->registry_artifacts) ||
+      !yai_exists_file(out->schema_primitives) ||
+      !yai_exists_file(out->schema_commands) ||
+      !yai_exists_file(out->schema_artifacts) ||
       !yai_exists_dir(out->artifacts_schema_dir)) {
     yai_law_paths_release(out);
     return ENOENT;
