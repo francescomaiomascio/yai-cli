@@ -32,6 +32,13 @@ int yai_law_registry_cache_load(yai_law_registry_cache_t *cache);
 /* Get loaded registry (NULL if not loaded). */
 const yai_law_registry_t *yai_law_registry_cache_get(const yai_law_registry_cache_t *cache);
 
+void yai_law_registry_cache_free(yai_law_registry_cache_t *cache);
+
+int yai_law_registry_cache_load_from_files(
+    yai_law_registry_cache_t *cache,
+    const char *commands_json_path,
+    const char *artifacts_json_path);
+
 #ifdef __cplusplus
 }
 #endif
