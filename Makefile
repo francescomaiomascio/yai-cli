@@ -33,25 +33,25 @@ LDFLAGS ?=
 
 # ---- Sources ----
 SRCS := \
-  src/main.c \
+  src/cli/main.c \
   src/support/fmt.c \
   src/platform/env.c \
   src/platform/paths.c \
-  src/rpc/rpc_client.c \
-  src/registry/registry.c \
-  src/registry/registry_help.c \
-  src/registry/registry_paths.c \
-  src/registry/registry_cache.c \
-  src/registry/registry_load.c \
-  src/registry/registry_query.c \
-  src/registry/registry_validate.c \
-  src/porcelain/porcelain.c \
-  src/porcelain/porcelain_errors.c \
-  src/porcelain/porcelain_help.c \
-  src/porcelain/porcelain_output.c \
-  src/porcelain/porcelain_parse.c \
-  src/ops/ops_dispatch.c \
-  src/ops/ops_dispatch_gen.c \
+  src/client/rpc/rpc_client.c \
+  src/client/registry/registry.c \
+  src/client/registry/registry_help.c \
+  src/client/registry/registry_paths.c \
+  src/client/registry/registry_cache.c \
+  src/client/registry/registry_load.c \
+  src/client/registry/registry_query.c \
+  src/client/registry/registry_validate.c \
+  src/cli/porcelain/porcelain.c \
+  src/cli/porcelain/porcelain_errors.c \
+  src/cli/porcelain/porcelain_help.c \
+  src/cli/porcelain/porcelain_output.c \
+  src/cli/porcelain/porcelain_parse.c \
+  src/client/ops/ops_dispatch.c \
+  src/client/ops/ops_dispatch_gen.c \
   third_party/cjson/cJSON.c
 
 # ---- Objects (mirror tree under build/) ----
