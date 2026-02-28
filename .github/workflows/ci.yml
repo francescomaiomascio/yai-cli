@@ -9,7 +9,7 @@ jobs:
   # 1. ARCHITECTURAL GATE
   # Fast check to ensure the workspace isn't polluted with nested laws
   audit:
-    uses: yai-labs/yai-infra/.github/workflows/audit-integrity.yml@main
+    uses: yai-labs/yai-infra/.github/workflows/reusable-audit.yml@main
     secrets: inherit
 
   # 2. FULL VERIFICATION

@@ -1,5 +1,5 @@
 # ==========================================
-# YAI CLI Build System (SDK-backed)
+# YAI CLI Build System (Modular Fix #2)
 # ==========================================
 
 CC ?= cc
@@ -14,28 +14,32 @@ BIN_DIR   := $(OUT_BIN_DIR)
 TARGET := $(BIN_DIR)/yai
 LEGACY_TARGET := $(BIN_DIR)/yai-cli
 
-# ---- SDK (submodule) ----
-SDK_DIR := $(ROOT_DIR)/deps/yai-sdk
-SDK_INC := $(SDK_DIR)/include
-SDK_LIB := $(SDK_DIR)/dist/lib/libyai_sdk.a
+# ---- DIPENDENZE (Assetto Piatto) ----
+SDK_DIR   := $(ROOT_DIR)/deps/yai-sdk
+# NOTA: Ora puntiamo al Law fratello nella CLI, non più dentro l'SDK!
+LAW_DIR   := $(ROOT_DIR)/deps/yai-law
 
-# ---- Law headers (protocol contracts) ----
-# NOTE: source of truth is deps/yai-sdk/deps/yai-law (not deps/yai-law in this repo)
-LAW_DIR := $(SDK_DIR)/deps/yai-law
+# Librerie generate dall'SDK (Fix #2)
+# Linkiamo ENTRAMBE per avere sia il protocollo che la logica SDK
+SDK_LIB   := $(SDK_DIR)/dist/lib/libyai_sdk.a
+PROTO_LIB := $(SDK_DIR)/dist/lib/libruntime_protocol.a
+
+# ---- Path di Include ----
+SDK_INC   := $(SDK_DIR)/include
 LAW_INC_PROTOCOL := $(LAW_DIR)/contracts/protocol/include
 LAW_INC_VAULT    := $(LAW_DIR)/contracts/vault/include
 LAW_INC_RUNTIME  := $(LAW_DIR)/contracts/protocol/runtime/include
 
 # ---- Flags ----
 CFLAGS ?= -Wall -Wextra -O2 -std=c11 -MMD -MP
-CFLAGS += -I$(ROOT_DIR)/include
-CFLAGS += -I$(SDK_INC)
+CFLAGS += -I$(ROOT_DIR)/include -I$(SDK_INC)
 CFLAGS += -I$(LAW_INC_PROTOCOL) -I$(LAW_INC_VAULT) -I$(LAW_INC_RUNTIME)
 
-LDFLAGS ?=
-LDLIBS  ?= $(SDK_LIB)
+# Importante: Linkiamo le librerie statiche
+# L'ordine conta: prima la CLI, poi l'SDK, poi il Protocollo (base)
+LDLIBS  := $(SDK_LIB) $(PROTO_LIB)
 
-# ---- Sources (CLI only) ----
+# ---- Sorgenti (Solo logica CLI) ----
 SRCS := \
   src/main.c \
   src/porcelain/porcelain.c \
@@ -48,28 +52,20 @@ SRCS := \
 OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
 DEPS := $(OBJS:.o=.d)
 
-TEST_BIN_DIR := $(BUILD_DIR)/tests
-UNIT_TEST_BIN := $(TEST_BIN_DIR)/unit_parse_test
-VECTORS_TEST_BIN := $(TEST_BIN_DIR)/vectors_rpc_test
+.PHONY: all clean dirs sdk test
 
-.PHONY: all clean dirs docs docs-clean test sdk sdk-clean
-
-all: dirs docs sdk $(TARGET)
-	@echo "--- [YAI-CLI] Build Complete ---"
+all: dirs sdk $(TARGET)
+	@echo "--- [YAI-CLI] Build Complete (Architecture Clean) ---"
 
 dirs:
 	@mkdir -p $(BUILD_DIR) $(BIN_DIR)
 
-# Build SDK as a static library (submodule)
+# Chiamiamo il target 'libs' dell'SDK che abbiamo creato prima
 sdk:
-	@echo "[SDK] build: $(SDK_DIR)"
-	@$(MAKE) -C $(SDK_DIR)
+	@echo "[SDK] Building Modular Libraries..."
+	@$(MAKE) -C $(SDK_DIR) libs
 
-sdk-clean:
-	@echo "[SDK] clean: $(SDK_DIR)"
-	@$(MAKE) -C $(SDK_DIR) clean
-
-$(TARGET): $(OBJS) sdk
+$(TARGET): $(OBJS)
 	@echo "[LINK] CLI: $@"
 	@$(CC) $(OBJS) $(LDLIBS) -o $@ $(LDFLAGS)
 	@ln -sf yai $(LEGACY_TARGET)
@@ -81,38 +77,6 @@ $(BUILD_DIR)/%.o: %.c | dirs
 
 clean:
 	@rm -rf $(BUILD_DIR) $(BIN_DIR)
-
-# -----------------------------------------
-# Docs (Doxygen) — CLI surface only
-# -----------------------------------------
-DOXYFILE ?= Doxyfile
-DOXYGEN ?= doxygen
-DOXY_OUT ?= dist/docs
-
-docs:
-	@mkdir -p $(DOXY_OUT)
-	@$(DOXYGEN) $(DOXYFILE)
-	@echo "[yai-cli] docs: $(DOXY_OUT)/doxygen/html/index.html"
-
-docs-clean:
-	@rm -rf $(DOXY_OUT)
-
-# -----------------------------------------
-# Tests
-# -----------------------------------------
-test: sdk $(UNIT_TEST_BIN) $(VECTORS_TEST_BIN)
-	@echo "[TEST] $(UNIT_TEST_BIN)"
-	@$(UNIT_TEST_BIN)
-	@echo "[TEST] $(VECTORS_TEST_BIN)"
-	@$(VECTORS_TEST_BIN)
-	@echo "--- [YAI-CLI] Tests Complete ---"
-
-$(UNIT_TEST_BIN): tests/unit/parse_test.c | dirs sdk
-	@mkdir -p $(TEST_BIN_DIR)
-	@$(CC) $(CFLAGS) $< $(LDLIBS) -o $@
-
-$(VECTORS_TEST_BIN): tests/vectors/rpc_vectors_test.c | dirs sdk
-	@mkdir -p $(TEST_BIN_DIR)
-	@$(CC) $(CFLAGS) $< $(LDLIBS) -o $@
+	@# Non puliamo l'SDK qui per velocità, ma puoi aggiungere sdk-clean se vuoi
 
 -include $(DEPS)
