@@ -37,12 +37,12 @@ LDLIBS  ?= $(SDK_LIB)
 
 # ---- Sources (CLI only) ----
 SRCS := \
-  src/cli/main.c \
-  src/cli/porcelain/porcelain.c \
-  src/cli/porcelain/porcelain_errors.c \
-  src/cli/porcelain/porcelain_help.c \
-  src/cli/porcelain/porcelain_output.c \
-  src/cli/porcelain/porcelain_parse.c \
+  src/main.c \
+  src/porcelain/porcelain.c \
+  src/porcelain/porcelain_errors.c \
+  src/porcelain/porcelain_help.c \
+  src/porcelain/porcelain_output.c \
+  src/porcelain/porcelain_parse.c \
   src/support/fmt.c
 
 OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))

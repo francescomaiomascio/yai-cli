@@ -13,7 +13,7 @@ FILE_PATTERNS          = *.h *.md
 
 # Inputs (CLI surface only)
 INPUT                  = include/yai_cli \
-                         src/cli \
+                         src/ \
                          src/support \
                          README.md \
                          docs/api/C_MAINPAGE.md
