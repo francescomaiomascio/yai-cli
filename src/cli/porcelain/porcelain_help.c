@@ -3,7 +3,7 @@
 
 #include "yai_cli/porcelain/porcelain_help.h"
 
-#include "yai_cli/registry/registry_registry.h"
+#include "yai_sdk/registry/registry_registry.h"
 #include "yai_cli/porcelain/porcelain_errors.h"
 
 #include <stddef.h>
