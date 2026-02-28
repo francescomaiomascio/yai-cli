@@ -846,6 +846,28 @@ static int print_command_help_token(const char *token)
 
 int yai_porcelain_help_print_any(const char *token)
 {
+  /* Built-in help topics (not part of the law registry) */
+  if (token && strcmp(token, "version") == 0) {
+    /* minimal, deterministic: read repo VERSION if present */
+    FILE* f = fopen("VERSION", "r");
+    if (f) {
+      char buf[128];
+      if (fgets(buf, sizeof(buf), f)) {
+        /* trim newline */
+        size_t n = strlen(buf);
+        while (n && (buf[n-1] == '\n' || buf[n-1] == '\r')) { buf[n-1] = 0; n--; }
+        printf("yai-cli %s\n", buf);
+      } else {
+        printf("yai-cli (version unknown)\n");
+      }
+      fclose(f);
+    } else {
+      printf("yai-cli (version unknown)\n");
+    }
+    return 0;
+  }
+
+
   /* No token => global help */
   if (!token || token[0] == '\0') return print_global_help();
 

@@ -37,6 +37,7 @@ static int is_global_option(const char* s) {
     strcmp(s, "--arming") == 0 ||
     strcmp(s, "--role") == 0 ||
     strcmp(s, "-h") == 0 || strcmp(s, "--help") == 0 ||
+    strcmp(s, "--version") == 0 ||
     strcmp(s, "-V") == 0
   );
 }
@@ -126,7 +127,7 @@ static int find_command_start(int argc, char** argv) {
     if (!is_global_option(t)) break;
 
     /* help/version handled outside; do not treat as value-taking globals */
-    if (strcmp(t, "--help") == 0 || strcmp(t, "-h") == 0 || strcmp(t, "--version") == 0) {
+    if (strcmp(t, "--help") == 0 || strcmp(t, "-h") == 0 || strcmp(t, "--version") == 0 || strcmp(t, "-V") == 0) {
       break; /* command token starts here */
     }
 
@@ -153,6 +154,20 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
   if (argc == 1) {
     req->kind = YAI_PORCELAIN_KIND_HELP;
     req->help_token = NULL;
+    return 0;
+  }
+
+
+  /* Early global flags: support `yai --help/-h` and `yai --version/-V` even before option scanning. */
+  if (is_help_token(argv[1])) {
+    req->kind = YAI_PORCELAIN_KIND_HELP;
+    req->help_token = (2 < argc) ? argv[2] : NULL;
+    return 0;
+  }
+
+  if (is_version_token(argv[1])) {
+    req->kind = YAI_PORCELAIN_KIND_HELP;
+    req->help_token = "version";
     return 0;
   }
 
