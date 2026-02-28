@@ -11,7 +11,7 @@ typedef enum yai_porcelain_err_e {
   // CLI usage / arguments
   YAI_PORCELAIN_ERR_USAGE = 2,
 
-  // Dependency missing (law registry not readable, etc.)
+  // Dependency missing (registry not readable, etc.)
   YAI_PORCELAIN_ERR_DEP_MISSING = 3,
 
   // Runtime not ready

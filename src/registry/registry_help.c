@@ -1,11 +1,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-// src/law/law_help.c
+// src/registry/registry_help.c
 
 #define _POSIX_C_SOURCE 200809L
 
-#include "yai_cli/law/law_help.h"
-#include "yai_cli/law/law_registry_cache.h"
-#include "yai_cli/law/law_registry_validate.h"
+#include "yai_cli/registry/registry_help.h"
+#include "yai_cli/registry/registry_cache.h"
+#include "yai_cli/registry/registry_validate.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -31,7 +31,7 @@ static const yai_law_registry_t* load_registry_or_null(void)
         /* validate once on load (hard fail) */
         int vrc = yai_law_registry_validate_all(r);
         if (vrc != 0) {
-            fprintf(stderr, "ERR: law registry validation failed (rc=%d)\n", vrc);
+            fprintf(stderr, "ERR: registry validation failed (rc=%d)\n", vrc);
             return NULL;
         }
     }
@@ -153,7 +153,7 @@ int yai_law_help_print_global(void)
 {
     const yai_law_registry_t *r = load_registry_or_null();
     if (!r) {
-        fprintf(stderr, "ERR: law registry not available\n");
+        fprintf(stderr, "ERR: registry not available\n");
         return 2;
     }
 
@@ -181,7 +181,7 @@ int yai_law_help_print_group(const char *group)
 
     const yai_law_registry_t *r = load_registry_or_null();
     if (!r) {
-        fprintf(stderr, "ERR: law registry not available\n");
+        fprintf(stderr, "ERR: registry not available\n");
         return 2;
     }
 
@@ -207,7 +207,7 @@ int yai_law_help_print_any(const char *tok)
 
     const yai_law_registry_t *r = load_registry_or_null();
     if (!r) {
-        fprintf(stderr, "ERR: law registry not available\n");
+        fprintf(stderr, "ERR: registry not available\n");
         return 2;
     }
 

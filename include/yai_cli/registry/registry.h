@@ -1,4 +1,4 @@
-// include/yai_cli/law/law.h
+// include/yai_cli/registry/law.h
 #pragma once
 
 #ifdef __cplusplus

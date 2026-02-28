@@ -38,13 +38,13 @@ SRCS := \
   src/platform/env.c \
   src/platform/paths.c \
   src/rpc/rpc_client.c \
-  src/law/law.c \
-  src/law/law_help.c \
-  src/law/law_paths.c \
-  src/law/registry_cache.c \
-  src/law/registry_load.c \
-  src/law/registry_query.c \
-  src/law/registry_validate.c \
+  src/registry/registry.c \
+  src/registry/registry_help.c \
+  src/registry/registry_paths.c \
+  src/registry/registry_cache.c \
+  src/registry/registry_load.c \
+  src/registry/registry_query.c \
+  src/registry/registry_validate.c \
   src/porcelain/porcelain.c \
   src/porcelain/porcelain_errors.c \
   src/porcelain/porcelain_help.c \

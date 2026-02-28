@@ -1,5 +1,5 @@
-// src/law/law_paths.c
-#include "yai_cli/law/law_paths.h"
+// src/registry/registry_paths.c
+#include "yai_cli/registry/registry_paths.h"
 
 #include <errno.h>
 #include <limits.h>
@@ -154,7 +154,7 @@ int yai_law_paths_init(yai_law_paths_t* out, const char* repo_root_hint) {
   yai_law_paths_zero(out);
 
   // 1) env override
-  const char* env = getenv("YAI_LAW_DIR");
+  const char* env = getenv("YAI_REGISTRY_DIR");
   if (env && env[0]) {
     if (!yai_exists_dir(env)) return ENOENT;
     out->law_dir = yai_strdup0(env);

@@ -1,6 +1,6 @@
-// src/law/registry_validate.c
-#include "yai_cli/law/law_registry_validate.h"
-#include "yai_cli/law/law_registry_cache.h"
+// src/registry/registry_validate.c
+#include "yai_cli/registry/registry_validate.h"
+#include "yai_cli/registry/registry_cache.h"
 
 #include <string.h>
 

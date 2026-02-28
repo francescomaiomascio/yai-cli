@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-// src/law/registry_load.c
+// src/registry/registry_load.c
 
-#include "yai_cli/law/law_registry.h"
-#include "yai_cli/law/law_registry_cache.h"
-#include "yai_cli/law/law_registry_validate.h"
+#include "yai_cli/registry/registry_registry.h"
+#include "yai_cli/registry/registry_cache.h"
+#include "yai_cli/registry/registry_validate.h"
 
 #include <stddef.h>
 #include <stdio.h>

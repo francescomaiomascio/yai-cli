@@ -1,7 +1,7 @@
-// src/law/law.c
-#include "yai_cli/law/law.h"
-#include "yai_cli/law/law_help.h"
-#include "yai_cli/law/law_registry.h"
+// src/registry/law.c
+#include "yai_cli/registry/registry.h"
+#include "yai_cli/registry/registry_help.h"
+#include "yai_cli/registry/registry_registry.h"
 
 #include <stdio.h>
 #include <string.h>

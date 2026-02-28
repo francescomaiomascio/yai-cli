@@ -2,7 +2,7 @@
 // src/porcelain/porcelain_parse.c
 
 #include "yai_cli/porcelain/porcelain_parse.h"
-#include "yai_cli/law/law_registry.h"
+#include "yai_cli/registry/registry_registry.h"
 
 #include <string.h>
 #include <stddef.h>
@@ -187,14 +187,14 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
     return 0;
   }
 
-  /* From here on, we need the law registry to resolve commands. */
+  /* From here on, we need the registry to resolve commands. */
   if (yai_law_registry_init() != 0) {
-    return set_err(req, "law registry unavailable (deps/yai-law not readable or invalid)");
+    return set_err(req, "registry unavailable (deps/yai-law not readable or invalid)");
   }
 
   const yai_law_registry_t* reg = yai_law_registry();
   if (!reg) {
-    return set_err(req, "law registry not loaded");
+    return set_err(req, "registry not loaded");
   }
 
   /* Support alias invocation:

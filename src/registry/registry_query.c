@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-// src/law/registry_query.c
+// src/registry/registry_query.c
 //
 // Registry query helpers (indexes) built on top of yai_law_registry()
 // which is published by registry_load.c.
 
 #define _POSIX_C_SOURCE 200809L
 
-#include "yai_cli/law/law_registry.h"
+#include "yai_cli/registry/registry_registry.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -203,7 +203,7 @@ static int registry_query_init(void) {
   return 0;
 }
 
-/* ---- Public query API (declared in law_registry.h) ---- */
+/* ---- Public query API (declared in registry_registry.h) ---- */
 
 const yai_law_command_t* yai_law_cmd_by_id(const char* id) {
   if (!id) return NULL;

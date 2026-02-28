@@ -1,4 +1,4 @@
-// include/yai_cli/law/law_registry_types.h
+// include/yai_cli/registry/registry_registry_types.h
 #pragma once
 
 #include <stddef.h>

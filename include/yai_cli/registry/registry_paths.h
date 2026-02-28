@@ -1,4 +1,4 @@
-// include/yai_cli/law/law_paths.h
+// include/yai_cli/registry/registry_paths.h
 #pragma once
 
 #include <stddef.h>
@@ -27,7 +27,7 @@ typedef struct yai_law_paths {
 
 // Initialize by resolving deps/yai-law.
 // Resolution order:
-//  1) env YAI_LAW_DIR (must exist)
+//  1) env YAI_REGISTRY_DIR (preferred); fallback: YAI_REGISTRY_DIR (legacy) (must exist)
 //  2) repo_root_hint + "/deps/yai-law" (if provided, must exist)
 //  3) search upwards from cwd for "/deps/yai-law"
 int yai_law_paths_init(yai_law_paths_t* out, const char* repo_root_hint);
