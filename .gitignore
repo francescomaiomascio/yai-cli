@@ -34,3 +34,6 @@ coverage/
 *.log
 .cache/
 tmp/
+
+# python editable install artifacts
+/tools/python/*.egg-info/
