@@ -1,8 +1,13 @@
-// tools/cli/include/yai_fmt.h
-#ifndef YAI_FMT_H
-#define YAI_FMT_H
+/* SPDX-License-Identifier: Apache-2.0 */
+#pragma once
 
-// minimal: if json_mode=1 print raw; else print a short human line
-void yai_print_response(const char *json_line, int json_mode);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+// Print a response payload (text or json), used by CLI porcelain.
+void yai_print_response(const char *payload, int json_mode);
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

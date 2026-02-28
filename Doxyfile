@@ -11,11 +11,15 @@ QUIET                  = NO
 RECURSIVE              = YES
 FILE_PATTERNS          = *.h *.md
 
-# Inputs
+# Inputs (CLI surface only)
 INPUT                  = include/yai_cli \
-                         src \
                          README.md \
                          docs/api/C_MAINPAGE.md
+
+# Exclude submodules & build outputs
+EXCLUDE                = deps \
+                         build \
+                         dist
 
 # Markdown
 MARKDOWN_SUPPORT       = YES

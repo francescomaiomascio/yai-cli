@@ -2,7 +2,7 @@
 // src/porcelain/porcelain_parse.c
 
 #include "yai_cli/porcelain/porcelain_parse.h"
-#include "yai_cli/registry/registry_registry.h"
+#include "yai_sdk/registry/registry_registry.h"
 
 #include <string.h>
 #include <stddef.h>

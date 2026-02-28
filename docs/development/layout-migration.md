@@ -13,7 +13,7 @@
 | src/cmd_dispatch.c | src/cli/dispatch.c | src | CLI dispatch module |
 | src/env.c | src/platform/env.c | src | Platform environment support |
 | src/paths.c | src/platform/paths.c | src | Platform paths support |
-| src/fmt.c | src/support/fmt.c | src | Support formatting module |
+| src/fmt.c | src/util/fmt.c | src | Support formatting module |
 | src/rpc.c | src/runtime/rpc_client.c | src | Runtime RPC client module |
 | src/cmd_root.c | src/commands/root.c | src | Command module |
 | src/cmd_kernel.c | src/commands/kernel.c | src | Command module |
@@ -61,7 +61,7 @@ Searching for files in directory /Users/francescomaiomascio/Developer/YAI/yai-cl
 Searching for files in directory /Users/francescomaiomascio/Developer/YAI/yai-cli/src/platform
 Searching for files in directory /Users/francescomaiomascio/Developer/YAI/yai-cli/src/runtime
 Searching for files in directory /Users/francescomaiomascio/Developer/YAI/yai-cli/src/cli
-Searching for files in directory /Users/francescomaiomascio/Developer/YAI/yai-cli/src/support
+Searching for files in directory /Users/francescomaiomascio/Developer/YAI/yai-cli/src/util
 Searching for files in directory /Users/francescomaiomascio/Developer/YAI/yai-cli/src/commands
 Reading and parsing tag files
 Parsing files
@@ -207,7 +207,7 @@ finished...
 [CC] src/commands/up.c
 [CC] src/platform/env.c
 [CC] src/platform/paths.c
-[CC] src/support/fmt.c
+[CC] src/util/fmt.c
 [CC] src/runtime/rpc_client.c
 [LINK] CLI: /Users/francescomaiomascio/Developer/YAI/yai-cli/dist/bin/yai-cli
 --- [YAI-CLI] Build Complete ---

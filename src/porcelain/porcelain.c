@@ -5,7 +5,7 @@
 #include "yai_cli/porcelain/porcelain_parse.h"
 #include "yai_cli/porcelain/porcelain_help.h"
 #include "yai_cli/porcelain/porcelain_errors.h"
-#include "yai_cli/ops/ops_dispatch.h"
+#include "yai_sdk/ops/ops_dispatch.h"
 
 #include <string.h>
 
