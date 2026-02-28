@@ -43,7 +43,7 @@ SRCS := \
   src/porcelain/porcelain_help.c \
   src/porcelain/porcelain_output.c \
   src/porcelain/porcelain_parse.c \
-  src/support/fmt.c
+  src/util/fmt.c
 
 OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
 DEPS := $(OBJS:.o=.d)

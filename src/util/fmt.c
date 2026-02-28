@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// src/support/fmt.c
+// src/util/fmt.c
 
 #include "yai_cli/fmt.h"
 
