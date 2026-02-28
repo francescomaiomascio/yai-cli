@@ -1,7 +1,7 @@
-// include/yai_cli/law/law_registry.h
+// include/yai_cli/registry/registry_registry.h
 #pragma once
 
-#include "yai_cli/law/law_registry_cache.h"
+#include "yai_cli/registry/registry_cache.h"
 
 #ifdef __cplusplus
 extern "C" {

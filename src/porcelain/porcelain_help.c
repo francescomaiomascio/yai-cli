@@ -3,7 +3,7 @@
 
 #include "yai_cli/porcelain/porcelain_help.h"
 
-#include "yai_cli/law/law_registry.h"
+#include "yai_cli/registry/registry_registry.h"
 #include "yai_cli/porcelain/porcelain_errors.h"
 
 #include <stddef.h>
@@ -75,10 +75,10 @@ static int err_usage(const char *detail)
 static int ensure_registry(void)
 {
   if (yai_law_registry_init() != 0) {
-    return err_dep_missing("law registry unavailable (deps/yai-law unreadable or invalid)");
+    return err_dep_missing("registry unavailable (deps/yai-law unreadable or invalid)");
   }
   if (!yai_law_registry()) {
-    return err_dep_missing("law registry not loaded");
+    return err_dep_missing("registry not loaded");
   }
   return 0;
 }
@@ -282,7 +282,7 @@ static void print_global_name_desc(void)
 
   out_heading_minor("DESCRIPTION");
   out_line("  Registry-driven interface for governed runtime operations.");
-  out_line("  Help output is deterministic and derived from the law registry.");
+  out_line("  Help output is deterministic and derived from the registry.");
 }
 
 static void print_global_synopsis(void)
@@ -408,7 +408,7 @@ static int print_global_help(void)
   if (rc != 0) return rc;
 
   const yai_law_registry_t *reg = reg_or_null();
-  if (!reg) return err_dep_missing("law registry not loaded");
+  if (!reg) return err_dep_missing("registry not loaded");
 
   print_global_usage();
   print_global_name_desc();
@@ -434,7 +434,7 @@ static int print_groups_only(void)
   if (rc != 0) return rc;
 
   const yai_law_registry_t *reg = reg_or_null();
-  if (!reg) return err_dep_missing("law registry not loaded");
+  if (!reg) return err_dep_missing("registry not loaded");
 
   const char **groups = NULL;
   size_t g_len = 0;
@@ -480,7 +480,7 @@ static int print_all_commands(void)
   if (rc != 0) return rc;
 
   const yai_law_registry_t *reg = reg_or_null();
-  if (!reg) return err_dep_missing("law registry not loaded");
+  if (!reg) return err_dep_missing("registry not loaded");
 
   out_heading("YAI commands (all)");
 
@@ -797,9 +797,9 @@ static int print_command_help_by_ptr(const yai_law_command_t *c)
   /* Contract metadata (kept structured, not noisy) */
   print_str_list("OUTPUTS", c->outputs, c->outputs_len);
   print_str_list("SIDE EFFECTS", c->side_effects, c->side_effects_len);
-  print_str_list("LAW HOOKS", c->law_hooks, c->law_hooks_len);
-  print_str_list("LAW INVARIANTS", c->law_invariants, c->law_invariants_len);
-  print_str_list("LAW BOUNDARIES", c->law_boundaries, c->law_boundaries_len);
+  print_str_list("CONTRACT HOOKS", c->law_hooks, c->law_hooks_len);
+  print_str_list("CONTRACT INVARIANTS", c->law_invariants, c->law_invariants_len);
+  print_str_list("CONTRACT BOUNDARIES", c->law_boundaries, c->law_boundaries_len);
   print_str_list("USES PRIMITIVES", c->uses_primitives, c->uses_primitives_len);
   print_artifacts_io("EMITS ARTIFACTS", c->emits_artifacts, c->emits_artifacts_len);
   print_artifacts_io("CONSUMES ARTIFACTS", c->consumes_artifacts, c->consumes_artifacts_len);
@@ -825,7 +825,7 @@ static int print_command_help_token(const char *token)
   if (rc != 0) return rc;
 
   const yai_law_registry_t *reg = reg_or_null();
-  if (!reg) return err_dep_missing("law registry not loaded");
+  if (!reg) return err_dep_missing("registry not loaded");
 
   /* canonical id: yai.<group>.<name> */
   if (strncmp(token, "yai.", 4) == 0) {

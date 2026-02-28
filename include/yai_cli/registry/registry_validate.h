@@ -1,7 +1,7 @@
-// include/yai_cli/law/law_registry_validate.h
+// include/yai_cli/registry/registry_registry_validate.h
 #pragma once
 
-#include "yai_cli/law/law_registry_types.h"
+#include "yai_cli/registry/registry_types.h"
 
 #ifdef __cplusplus
 extern "C" {

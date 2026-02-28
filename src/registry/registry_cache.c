@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
-// src/law/registry_cache.c
+// src/registry/registry_cache.c
 //
 // File-backed registry cache (block-zero mode).
 // Reads deps/yai-law/registry/{commands,artifacts}.v1.json via law_paths.
 // Later, when you have a real generator, you can swap this to embedded tables.
 
-#include "yai_cli/law/law_registry_cache.h"
-#include "yai_cli/law/law_paths.h"
-#include "yai_cli/law/law_registry_types.h"
+#include "yai_cli/registry/registry_cache.h"
+#include "yai_cli/registry/registry_paths.h"
+#include "yai_cli/registry/registry_types.h"
 
 #include "cJSON.h"
 

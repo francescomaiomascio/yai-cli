@@ -5,8 +5,8 @@ Specs in that directory are the contract source of truth.
 
 ## Canonical References
 
-- Commands contract: `deps/yai-law/law/abi/registry/commands.v1.json`
-- Commands schema: `deps/yai-law/law/abi/schema/commands.v1.schema.json`
+- Commands contract: `deps/yai-law/registry/registry/commands.v1.json`
+- Commands schema: `deps/yai-law/registry/schema/commands.v1.schema.json`
 - Protocol envelope/IDs: `deps/yai-law/law/surfaces/protocol/include/transport.h`, `deps/yai-law/law/surfaces/protocol/include/yai_protocol_ids.h`
 - Errors/auth/roles: `deps/yai-law/law/surfaces/protocol/include/errors.h`, `deps/yai-law/law/surfaces/protocol/include/auth.h`, `deps/yai-law/law/surfaces/protocol/include/roles.h`
 
