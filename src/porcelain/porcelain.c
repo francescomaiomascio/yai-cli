@@ -5,7 +5,7 @@
 #include "yai_cli/porcelain/porcelain_parse.h"
 #include "yai_cli/porcelain/porcelain_help.h"
 #include "yai_cli/porcelain/porcelain_errors.h"
-#include "yai_sdk/ops/ops_dispatch.h"
+#include "yai_sdk/public.h"
 
 #include <string.h>
 
@@ -69,7 +69,20 @@ int yai_porcelain_run(int argc, char **argv)
         /* resolved command id -> show contract help */
         return yai_porcelain_help_print_any(req.command_id);
       }
-      return yai_ops_dispatch_by_id(req.command_id, req.cmd_argc, req.cmd_argv);
+      {
+        yai_exec_request_t sdk_req = {
+          .command_id = req.command_id,
+          .argc = req.cmd_argc,
+          .argv = (const char **)req.cmd_argv,
+          .json_mode = 1,
+        };
+        yai_exec_result_t out = {0};
+        int rc = yai_sdk_execute(&sdk_req, &out);
+        if (rc != 0 && out.message && out.message[0]) {
+          yai_porcelain_err_print(YAI_PORCELAIN_ERR_GENERIC, out.message);
+        }
+        return rc;
+      }
 
     case YAI_PORCELAIN_KIND_ERROR:
       return err_usage_with_hint(req.error);
