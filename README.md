@@ -1,85 +1,78 @@
-# yai-cli - The Operator Interface
+# yai-cli — Governed Operator Interface for the YAI Platform
 
-YAI = "YAI Ain't Intelligence"  
-The CLI is where humans meet sovereignty.
+`yai-cli` is the enterprise command-line control surface for governed YAI runtime operations.
 
-`yai-cli` is the official command-line interface for the YAI runtime. It is intentionally thin: a contract-driven operator surface over the control plane of YAI.
+It is intentionally thin, deterministic, and auditable: a contract-driven operator interface over `yai-sdk` and pinned `yai-law` artifacts.
 
-It is built to be predictable, auditable, and compatible with the pinned canonical YAI Law. No hidden behaviors. No surprise side effects.
+## Platform role
 
----
+Dependency and authority chain:
 
-## 1) What it is
+`yai-law` -> `yai-sdk` -> `yai-cli` -> `yai` -> `yai-ops`
 
-- The primary interface for operating YAI planes: Root, Kernel, Engine, Mind, and Law
-- A strict consumer of the canonical command set defined in YAI Law
-- A production-oriented tool for operators, developers, and CI gates
+The CLI does not invent contract semantics.
+It executes and exposes them.
 
----
+## What this repository is
 
-## 2) What it is not
+- Primary operator interface for Root, Kernel, Engine, and Mind-facing runtime operations
+- Deterministic command surface aligned to pinned law registries and schemas
+- Production tooling for operators, CI gates, and integration workflows
 
-- Not an "interactive shell" that invents workflows
-- Not a wrapper around prompts
-- Not a place where contracts are negotiated
+## What this repository is not
 
-The CLI follows the contracts. If the contract changes, the CLI updates with it.
+- Not a policy authority repository
+- Not a speculative workflow shell
+- Not a place to negotiate contract semantics outside `yai-law`
 
----
+## Contract discipline (non-negotiable)
 
-## 3) Contract discipline (non-negotiable)
+The CLI is governed by pinned law and SDK surfaces:
 
-The CLI is governed by pinned law:
+- Canonical command registry: `deps/yai-law/registry/commands.v1.json`
+- Canonical command schema: `deps/yai-law/registry/schema/commands.v1.schema.json`
+- Canonical protocol surface: `deps/yai-law/contracts/protocol/include/*`
+- Canonical SDK public include: `deps/yai-sdk/include/yai_sdk/public.h`
 
-- Canonical command set: `deps/yai-law/law/abi/registry/commands.v1.json`
-- Canonical schema: `deps/yai-law/law/abi/schema/commands.v1.schema.json`
-- Protocol envelope + IDs: `deps/yai-law/law/surfaces/protocol/include/*`
+If behavior drifts from pinned law, the implementation is defective.
 
-If behavior drifts from the pinned law, it's a bug. Fix the implementation - do not "work around" it.
+## Determinism and governance posture
 
----
+- No hidden side effects
+- Explicit return-code semantics
+- Reproducible releases and compatibility tracking
+- Law pinning is explicit and reviewable
 
-## Install
-
-Two common paths:
-
-1) From a YAI Bundle (recommended)  
-The public bundle ships an entrypoint `yai` that includes the CLI.
-
-2) From source
+## Build and outputs
 
 ```bash
 make
 ```
 
 Outputs:
-- `dist/bin/yai` (canonical)
+- `dist/bin/yai` (canonical entrypoint)
 - `dist/bin/yai-cli` (compat alias)
 
 ## Quick usage
 
 ```bash
-# Root plane (global authority)
 ./dist/bin/yai root status
-./dist/bin/yai root ping
-
-# Kernel plane (workspace lifecycle / control)
 ./dist/bin/yai kernel ws list
-
-# Engine/Mind are workspace-scoped
 ./dist/bin/yai engine --ws dev status
-./dist/bin/yai mind   --ws dev chat "ciao"
+./dist/bin/yai mind --ws dev chat "status"
 ```
 
-## Governance and lifecycle
+## Documentation entrypoint
 
-This repo is run like infrastructure:
+- `docs/README.md`
 
-- Releases are reproducible
-- Law is pinned explicitly (never floating)
-- Compatibility is tracked and enforced
+## Governance references
 
-See: `VERSIONING.md`, `COMPATIBILITY.md`, `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`.
+- `VERSIONING.md`
+- `COMPATIBILITY.md`
+- `CHANGELOG.md`
+- `SECURITY.md`
+- `CONTRIBUTING.md`
 
 ## License
 
