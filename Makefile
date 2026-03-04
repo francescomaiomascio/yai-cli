@@ -20,8 +20,11 @@ SDK_INC := $(SDK_DIR)/include
 SDK_LIB := $(SDK_DIR)/dist/lib/libyai_sdk.a
 
 # ---- Law headers (protocol contracts) ----
-# NOTE: source of truth is deps/yai-sdk/deps/yai-law (not deps/yai-law in this repo)
+# Prefer SDK-pinned law, fallback to workspace-level deps/yai-law.
 LAW_DIR := $(SDK_DIR)/deps/yai-law
+ifeq ($(wildcard $(LAW_DIR)/contracts/protocol/include/protocol.h),)
+LAW_DIR := $(ROOT_DIR)/deps/yai-law
+endif
 LAW_INC_PROTOCOL := $(LAW_DIR)/contracts/protocol/include
 LAW_INC_VAULT    := $(LAW_DIR)/contracts/vault/include
 LAW_INC_RUNTIME  := $(LAW_DIR)/contracts/protocol/runtime/include
