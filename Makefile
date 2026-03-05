@@ -46,6 +46,7 @@ SRCS := \
   src/porcelain/porcelain_help.c \
   src/porcelain/porcelain_output.c \
   src/porcelain/porcelain_parse.c \
+  src/porcelain/response_render.c \
   src/util/fmt.c
 
 OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))

@@ -23,6 +23,7 @@ typedef struct yai_porcelain_request_s {
 
   // For COMMAND:
   const char* command_id;
+  int verbose_contract;
   int cmd_argc;
   char** cmd_argv;
 

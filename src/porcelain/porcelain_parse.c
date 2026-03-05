@@ -33,6 +33,7 @@ static int is_global_option(const char* s) {
   return (
     strcmp(s, "--ws") == 0 ||
     strcmp(s, "--json") == 0 ||
+    strcmp(s, "--verbose-contract") == 0 ||
     strcmp(s, "--timeout-ms") == 0 ||
     strcmp(s, "--arming") == 0 ||
     strcmp(s, "--role") == 0 ||
@@ -49,6 +50,16 @@ static int global_option_takes_value(const char* s) {
     strcmp(s, "--timeout-ms") == 0 ||
     strcmp(s, "--role") == 0
   );
+}
+
+static int has_verbose_contract_flag(int argc, char **argv)
+{
+  for (int i = 1; i < argc; i++) {
+    if (argv && argv[i] && strcmp(argv[i], "--verbose-contract") == 0) {
+      return 1;
+    }
+  }
+  return 0;
 }
 
 /* Group abbreviations (UX layer). */
@@ -173,6 +184,7 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
 
   /* Determine where the command starts, allowing global options before it. */
   int cmdi = find_command_start(argc, argv);
+  req->verbose_contract = has_verbose_contract_flag(argc, argv);
   if (cmdi < 0 || cmdi >= argc || !argv[cmdi]) {
     return set_err(req, "invalid global options (missing value)");
   }
