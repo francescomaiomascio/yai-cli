@@ -37,6 +37,7 @@ typedef struct yai_porcelain_request_s {
 
   // For ERROR:
   const char* error;
+  const char* error_hint;
 } yai_porcelain_request_t;
 
 int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req);

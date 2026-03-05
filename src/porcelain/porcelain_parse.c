@@ -15,9 +15,10 @@ static void req_zero(yai_porcelain_request_t* r) {
   r->arming = 1;
 }
 
-static int set_err(yai_porcelain_request_t* r, const char* msg) {
+static int set_err(yai_porcelain_request_t* r, const char* msg, const char* hint) {
   r->kind = YAI_PORCELAIN_KIND_ERROR;
   r->error = msg ? msg : "unknown error";
+  r->error_hint = hint;
   return 1;
 }
 
@@ -190,7 +191,7 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
   req_zero(req);
 
   if (argc <= 0 || !argv || !argv[0]) {
-    return set_err(req, "invalid argv");
+    return set_err(req, "invalid argv", "yai help");
   }
 
   /* `yai` -> show global help */
@@ -224,7 +225,7 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
   if (!req->role || !req->role[0]) req->role = "operator";
   req->arming = find_global_arming(argc, argv, 1);
   if (cmdi < 0 || cmdi >= argc || !argv[cmdi]) {
-    return set_err(req, "invalid global options (missing value)");
+    return set_err(req, "invalid global options (missing value)", "yai help");
   }
 
   /* `yai --help` / `yai -h` (even with global options before) */
@@ -256,14 +257,30 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
     return 0;
   }
 
+  /* Built-in lifecycle path (registry independent). */
+  if (strcmp(argv[cmdi], "lifecycle") == 0) {
+    if (cmdi + 1 >= argc || !argv[cmdi + 1]) {
+      return set_err(req, "missing lifecycle action", "yai help lifecycle");
+    }
+    const char* action = argv[cmdi + 1];
+    if (strcmp(action, "up") == 0) req->command_id = "yai.lifecycle.up";
+    else if (strcmp(action, "down") == 0) req->command_id = "yai.lifecycle.down";
+    else if (strcmp(action, "restart") == 0) req->command_id = "yai.lifecycle.restart";
+    else return set_err(req, "unknown lifecycle action", "yai help lifecycle");
+    req->kind = YAI_PORCELAIN_KIND_COMMAND;
+    req->cmd_argc = argc - (cmdi + 2);
+    req->cmd_argv = &argv[cmdi + 2];
+    return 0;
+  }
+
   /* From here on, we need the registry to resolve commands. */
   if (yai_law_registry_init() != 0) {
-    return set_err(req, "registry unavailable (deps/yai-law not readable or invalid)");
+    return set_err(req, "registry unavailable (deps/yai-law not readable or invalid)", "yai help");
   }
 
   const yai_law_registry_t* reg = yai_law_registry();
   if (!reg) {
-    return set_err(req, "registry not loaded");
+    return set_err(req, "registry not loaded", "yai help");
   }
 
   /* Support alias invocation:
@@ -281,7 +298,7 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
 
   /* Primary form: `yai <group> <name> ...` requires at least 2 tokens from cmdi. */
   if (cmdi + 1 >= argc || !argv[cmdi + 1]) {
-    return set_err(req, "missing command name (expected: yai <group> <name>)");
+    return set_err(req, "missing command name (expected: yai <group> <name>)", "yai help");
   }
 
   const char* group_raw = argv[cmdi];
@@ -300,9 +317,9 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
   if (!cmd || !cmd->id) {
     yai_law_cmd_list_t lst = yai_law_cmds_by_group(group);
     if (lst.items && lst.len > 0) {
-      return set_err(req, "unknown command name for group (try: yai help <group>)");
+      return set_err(req, "unknown command name for group", "yai help <group>");
     }
-    return set_err(req, "unknown command group (try: yai help --groups)");
+    return set_err(req, "unknown command group", "yai help --groups");
   }
 
   req->kind = YAI_PORCELAIN_KIND_COMMAND;

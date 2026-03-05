@@ -39,17 +39,38 @@ static int is_helpish_command_invocation(int cmd_argc, char **cmd_argv)
   return is_help_token(cmd_argv[0]);
 }
 
-static int err_usage_with_hint(const char *detail)
+static void ensure_exec_reply_json(yai_sdk_reply_t *reply)
 {
-  /* enterprise-style: actionable message */
-  if (detail && detail[0]) {
-    yai_porcelain_err_print(YAI_PORCELAIN_ERR_USAGE, detail);
-  } else {
-    yai_porcelain_err_print(YAI_PORCELAIN_ERR_USAGE, "invalid arguments");
+  char buf[768];
+  size_t len;
+  int n;
+  if (!reply || reply->exec_reply_json) return;
+  n = snprintf(buf, sizeof(buf),
+               "{\"type\":\"yai.exec.reply.v1\",\"status\":\"%s\",\"code\":\"%s\",\"reason\":\"%s\",\"command_id\":\"%s\",\"target_plane\":\"%s\",\"trace_id\":\"%s\"}",
+               reply->status[0] ? reply->status : "error",
+               reply->code[0] ? reply->code : "INTERNAL_ERROR",
+               reply->reason[0] ? reply->reason : "internal_error",
+               reply->command_id[0] ? reply->command_id : "yai.unknown.unknown",
+               reply->target_plane[0] ? reply->target_plane : "kernel",
+               reply->trace_id);
+  if (n > 0 && (size_t)n < sizeof(buf)) {
+    len = (size_t)n;
+    reply->exec_reply_json = (char *)malloc(len + 1);
+    if (reply->exec_reply_json) {
+      memcpy(reply->exec_reply_json, buf, len + 1);
+    }
   }
-  /* keep hint minimal (avoid noisy UX) */
-  yai_porcelain_err_print(YAI_PORCELAIN_ERR_USAGE, "try: yai help");
-  return yai_porcelain_err_exit_code(YAI_PORCELAIN_ERR_USAGE);
+}
+
+static int err_usage_with_hint(const char *detail, const char *hint, int verbose_contract)
+{
+  if (verbose_contract) {
+    fprintf(stderr, "yai: error (BAD_ARGS): %s\n", (detail && detail[0]) ? detail : "invalid arguments");
+    return 20;
+  }
+  yai_porcelain_err_print(YAI_PORCELAIN_ERR_USAGE, (detail && detail[0]) ? detail : "invalid arguments");
+  yai_porcelain_err_print(YAI_PORCELAIN_ERR_USAGE, hint && hint[0] ? hint : "try: yai help");
+  return 20;
 }
 
 int yai_porcelain_run(int argc, char **argv)
@@ -58,8 +79,7 @@ int yai_porcelain_run(int argc, char **argv)
 
   int prc = yai_porcelain_parse_argv(argc, argv, &req);
   if (prc != 0) {
-    /* parse populates req.error when possible */
-    return err_usage_with_hint(req.error);
+    return err_usage_with_hint(req.error, req.error_hint, req.verbose_contract);
   }
 
   switch (req.kind) {
@@ -77,19 +97,17 @@ int yai_porcelain_run(int argc, char **argv)
       {
         yai_sdk_reply_t reply = {0};
         int sdk_rc = 0;
-        char *control_call_json = NULL;
+        char *control_call_json = yai_build_control_call_json(req.command_id, req.cmd_argc, req.cmd_argv);
+        if (!control_call_json) {
+          yai_porcelain_err_print(YAI_PORCELAIN_ERR_GENERIC, "cannot build control_call json");
+          return yai_porcelain_err_exit_code(YAI_PORCELAIN_ERR_GENERIC);
+        }
 
         if (strcmp(req.command_id, "yai.lifecycle.up") == 0 ||
             strcmp(req.command_id, "yai.lifecycle.down") == 0 ||
             strcmp(req.command_id, "yai.lifecycle.restart") == 0) {
           sdk_rc = yai_cli_lifecycle_run(req.command_id, &reply);
         } else {
-          control_call_json = yai_build_control_call_json(req.command_id, req.cmd_argc, req.cmd_argv);
-          if (!control_call_json) {
-            yai_porcelain_err_print(YAI_PORCELAIN_ERR_GENERIC, "cannot build control_call json");
-            return yai_porcelain_err_exit_code(YAI_PORCELAIN_ERR_GENERIC);
-          }
-
           yai_sdk_client_opts_t opts = {
             .ws_id = req.ws_id ? req.ws_id : "default",
             .uds_path = NULL,
@@ -115,6 +133,7 @@ int yai_porcelain_run(int argc, char **argv)
             snprintf(reply.target_plane, sizeof(reply.target_plane), "%s", "root");
           }
         }
+        ensure_exec_reply_json(&reply);
 
         int rendered = 0;
         if (req.json_output) {
@@ -137,7 +156,7 @@ int yai_porcelain_run(int argc, char **argv)
       }
 
     case YAI_PORCELAIN_KIND_ERROR:
-      return err_usage_with_hint(req.error);
+      return err_usage_with_hint(req.error, req.error_hint, req.verbose_contract);
 
     default:
       yai_porcelain_err_print(YAI_PORCELAIN_ERR_GENERIC, "internal error");

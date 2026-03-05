@@ -107,16 +107,18 @@ docs-clean:
 # -----------------------------------------
 # Tests
 # -----------------------------------------
-test: sdk $(UNIT_TEST_BIN) $(VECTORS_TEST_BIN)
+test: sdk $(TARGET) $(UNIT_TEST_BIN) $(VECTORS_TEST_BIN)
 	@echo "[TEST] $(UNIT_TEST_BIN)"
 	@$(UNIT_TEST_BIN)
 	@echo "[TEST] $(VECTORS_TEST_BIN)"
 	@$(VECTORS_TEST_BIN)
+	@echo "[TEST] tests/integration/ghost_guardrail.sh"
+	@tests/integration/ghost_guardrail.sh
 	@echo "--- [YAI-CLI] Tests Complete ---"
 
 $(UNIT_TEST_BIN): tests/unit/parse_test.c | dirs sdk
 	@mkdir -p $(TEST_BIN_DIR)
-	@$(CC) $(CFLAGS) $< $(LDLIBS) -o $@
+	@$(CC) $(CFLAGS) $< src/porcelain/porcelain_parse.c $(LDLIBS) -o $@
 
 $(VECTORS_TEST_BIN): tests/vectors/rpc_vectors_test.c | dirs sdk
 	@mkdir -p $(TEST_BIN_DIR)
