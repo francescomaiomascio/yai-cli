@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <inttypes.h>
+#include <ctype.h>
 
 /* =========================================================
  * Plain output helpers (no bullets, no key/value formatting)
@@ -96,37 +97,23 @@ static const char *group_desc(const char *g)
 {
   if (!g) return NULL;
 
+  if (strcmp(g, "boot") == 0)      return "Boot and runtime readiness surfaces.";
+  if (strcmp(g, "bundle") == 0)    return "Bundle build, seal, import/export and verification.";
   if (strcmp(g, "lifecycle") == 0) return "Start/stop stack components and sessions.";
   if (strcmp(g, "inspect") == 0)   return "Read-only diagnostics (status, logs, streams).";
   if (strcmp(g, "verify") == 0)    return "Verification and test gates.";
   if (strcmp(g, "control") == 0)   return "Control plane operations (root/kernel/providers/sessions).";
+  if (strcmp(g, "kernel") == 0)    return "Kernel boundary and workspace enforcement surfaces.";
+  if (strcmp(g, "engine") == 0)    return "Engine execution/control surfaces.";
   if (strcmp(g, "memory") == 0)    return "Mind memory operations (graph, embed).";
+  if (strcmp(g, "mind") == 0)      return "Mind proposer/cognition-facing command surface.";
+  if (strcmp(g, "root") == 0)      return "Root router, handshake and forwarding surface.";
   if (strcmp(g, "substrate") == 0) return "Deterministic primitives (hash, record, manifest, fs).";
   if (strcmp(g, "governance") == 0) return "Governance operations (policy, decision, evidence, scope).";
-  if (strcmp(g, "bundle") == 0)    return "Bundle build/seal/export/import/verify.";
   if (strcmp(g, "orch") == 0)      return "Orchestration (pack, trial, runner, jobs).";
 
   return NULL;
 }
-
-/* These are “command sets” for presentation. */
-typedef struct yai_help_set_def {
-  const char *id;          /* internal label key */
-  const char *title;       /* printed title */
-  const char *groups[8];   /* groups included */
-} yai_help_set_def_t;
-
-static const yai_help_set_def_t g_sets[] = {
-  { "runtime",     "RUNTIME LIFECYCLE",    { "lifecycle", NULL } },
-  { "inspect",     "INSPECT AND DIAGNOSTICS",{ "inspect", NULL } },
-  { "verify",      "VERIFICATION",         { "verify", NULL } },
-  { "control",     "CONTROL PLANE",        { "control", NULL } },
-  { "memory",      "MIND / MEMORY",        { "memory", NULL } },
-  { "substrate",   "SUBSTRATE PRIMITIVES", { "substrate", NULL } },
-  { "governance",  "GOVERNANCE",           { "governance", NULL } },
-  { "bundle",      "BUNDLES",              { "bundle", NULL } },
-  { "orch",        "ORCHESTRATION",        { "orch", NULL } },
-};
 
 /* =========================================================
  * Sorting helpers (stable output)
@@ -256,9 +243,33 @@ static void print_cmd_line(const yai_law_command_t *c)
   char alias[256];
   build_alias(c, alias, sizeof(alias));
 
+  char summary_buf[512];
+  const char *summary = (c->summary ? c->summary : "");
+
+  /* Normalize generator-style summaries to a shorter human format. */
+  {
+    char g[64] = {0};
+    char verb[64] = {0};
+    char obj[160] = {0};
+    int n = sscanf(summary, "%63s %63s operation on %159s", g, verb, obj);
+    if (n == 3) {
+      size_t olen = strlen(obj);
+      while (olen > 0 && (obj[olen - 1] == '.' || obj[olen - 1] == ',')) {
+        obj[olen - 1] = '\0';
+        olen--;
+      }
+      for (size_t i = 0; obj[i]; i++) {
+        if (obj[i] == '_') obj[i] = ' ';
+      }
+      if (verb[0]) verb[0] = (char)toupper((unsigned char)verb[0]);
+      snprintf(summary_buf, sizeof(summary_buf), "%s %s in %s scope.", verb, obj, g);
+      summary = summary_buf;
+    }
+  }
+
   /* aligned command list: "  <alias>  <summary>" */
   char line[1024];
-  snprintf(line, sizeof(line), "  %-22s %s", alias, (c->summary ? c->summary : ""));
+  snprintf(line, sizeof(line), "  %-22s %s", alias, summary);
   out_line(line);
 }
 
@@ -322,59 +333,41 @@ static void print_global_examples(void)
   out_line("  yai control root ping");
 }
 
-static int print_command_sets(const yai_law_registry_t *reg)
+static int print_groups_overview(const yai_law_registry_t *reg)
 {
-  out_blank();
-  out_heading_minor("COMMON COMMANDS");
+  if (!reg) return err_dep_missing("registry not loaded");
 
-  if (!reg || reg->commands_len == 0) {
-    out_line("  (no commands registered)");
+  const char **groups = NULL;
+  size_t g_len = 0;
+  int rc = collect_unique_groups_sorted(reg, &groups, &g_len);
+  if (rc != 0) return err_dep_missing("failed to enumerate groups");
+
+  out_blank();
+  out_heading_minor("GROUP OVERVIEW");
+
+  if (g_len == 0) {
+    out_line("  (none)");
+    free(groups);
     return 0;
   }
 
-  /* We present sets in a fixed order (g_sets). Within each group, commands are name-sorted. */
-  for (size_t si = 0; si < (sizeof(g_sets) / sizeof(g_sets[0])); si++) {
-    const yai_help_set_def_t *set = &g_sets[si];
-    if (!set->title) continue;
+  for (size_t i = 0; i < g_len; i++) {
+    const char *g = groups[i];
+    if (!g) continue;
+    yai_law_cmd_list_t lst = yai_law_cmds_by_group(g);
+    const char *d = group_desc(g);
 
-    /* Collect commands for all groups in this set. */
-    /* Upper bound: reg->commands_len */
-    yai_law_command_t **cmds = (yai_law_command_t **)calloc(reg->commands_len, sizeof(yai_law_command_t *));
-    if (!cmds) return err_dep_missing("out of memory");
-
-    size_t c_len = 0;
-
-    for (size_t gi = 0; set->groups[gi]; gi++) {
-      const char *g = set->groups[gi];
-
-      yai_law_cmd_list_t lst = yai_law_cmds_by_group(g);
-      if (!lst.items || lst.len == 0) continue;
-
-      for (size_t i = 0; i < lst.len; i++) {
-        const yai_law_command_t *c = lst.items[i];
-        if (!c) continue;
-        cmds[c_len++] = (yai_law_command_t *)c;
-      }
+    char line[1024];
+    snprintf(line, sizeof(line), "  %-16s %4zu commands", g, lst.len);
+    out_line(line);
+    if (d && d[0]) {
+      char dline[1024];
+      snprintf(dline, sizeof(dline), "                   %s", d);
+      out_line(dline);
     }
-
-    if (c_len == 0) {
-      free(cmds);
-      continue; /* skip empty sections */
-    }
-
-    /* sort by command name for readability */
-    qsort(cmds, c_len, sizeof(cmds[0]), cmp_cmd_ptr_by_name);
-
-    out_blank();
-    out_heading_minor(set->title);
-
-    for (size_t i = 0; i < c_len; i++) {
-      print_cmd_line(cmds[i]);
-    }
-
-    free(cmds);
   }
 
+  free(groups);
   return 0;
 }
 
@@ -414,9 +407,17 @@ static int print_global_help(void)
   print_global_name_desc();
   print_global_synopsis();
   print_global_options();
-
-  rc = print_command_sets(reg);
+  rc = print_groups_overview(reg);
   if (rc != 0) return rc;
+
+  out_blank();
+  out_heading_minor("QUICK START");
+  out_line("  yai root ping");
+  out_line("  yai kernel ping");
+  out_line("  yai inspect status");
+  out_line("  yai lifecycle up");
+  out_line("  yai lifecycle down");
+  out_line("  yai help kernel");
 
   print_global_examples();
   print_more_help();
@@ -514,11 +515,125 @@ static int print_all_commands(void)
   return 0;
 }
 
+static void humanize_token(const char *in, char *out, size_t out_cap)
+{
+  if (!out || out_cap == 0) return;
+  out[0] = '\0';
+  if (!in) return;
+
+  size_t oi = 0;
+  for (size_t i = 0; in[i] && oi + 1 < out_cap; i++) {
+    char ch = in[i];
+    if (ch == '_') ch = ' ';
+    out[oi++] = ch;
+  }
+  out[oi] = '\0';
+}
+
+/* Generated names are typically "<object>_<verb>". */
+static int split_generated_name(const char *name, char *obj, size_t obj_cap, char *verb, size_t verb_cap)
+{
+  if (!name || !obj || obj_cap == 0 || !verb || verb_cap == 0) return 0;
+  obj[0] = '\0';
+  verb[0] = '\0';
+
+  const char *us = strchr(name, '_');
+  if (!us || us == name || !us[1]) return 0;
+
+  size_t obj_len = (size_t)(us - name);
+  size_t verb_len = strlen(us + 1);
+  if (obj_len + 1 > obj_cap || verb_len + 1 > verb_cap) return 0;
+
+  memcpy(obj, name, obj_len);
+  obj[obj_len] = '\0';
+  memcpy(verb, us + 1, verb_len);
+  verb[verb_len] = '\0';
+  return 1;
+}
+
+static void print_group_compact_families(yai_law_command_t **sorted, size_t len, const char *group)
+{
+  if (!sorted || len == 0) return;
+
+  out_blank();
+  out_heading_minor("COMMAND FAMILIES (COMPACT)");
+
+  char cur_obj_raw[128] = {0};
+  char verbs_line[2048] = {0};
+  int have_family = 0;
+  size_t compact_lines = 0;
+
+  for (size_t i = 0; i < len; i++) {
+    const yai_law_command_t *c = sorted[i];
+    if (!c || !c->name) continue;
+
+    char obj[128], verb[128];
+    if (!split_generated_name(c->name, obj, sizeof(obj), verb, sizeof(verb))) {
+      if (have_family) {
+        char line[2300];
+        snprintf(line, sizeof(line), "  %s-%s: %s", group, cur_obj_raw, verbs_line);
+        out_line(line);
+        compact_lines++;
+        have_family = 0;
+        cur_obj_raw[0] = '\0';
+        verbs_line[0] = '\0';
+      }
+      print_cmd_line(c);
+      continue;
+    }
+
+    char verb_h[128];
+    humanize_token(verb, verb_h, sizeof(verb_h));
+
+    if (!have_family || strcmp(cur_obj_raw, obj) != 0) {
+      if (have_family) {
+        char line[2300];
+        snprintf(line, sizeof(line), "  %s-%s: %s", group, cur_obj_raw, verbs_line);
+        out_line(line);
+        compact_lines++;
+      }
+      snprintf(cur_obj_raw, sizeof(cur_obj_raw), "%s", obj);
+      snprintf(verbs_line, sizeof(verbs_line), "%s", verb_h);
+      have_family = 1;
+    } else {
+      size_t used = strlen(verbs_line);
+      if (used + 2 < sizeof(verbs_line)) {
+        strncat(verbs_line, ", ", sizeof(verbs_line) - used - 1);
+        used = strlen(verbs_line);
+      }
+      if (used + strlen(verb_h) < sizeof(verbs_line)) {
+        strncat(verbs_line, verb_h, sizeof(verbs_line) - used - 1);
+      }
+    }
+  }
+
+  if (have_family) {
+    char line[2300];
+    snprintf(line, sizeof(line), "  %s-%s: %s", group, cur_obj_raw, verbs_line);
+    out_line(line);
+    compact_lines++;
+  }
+
+  out_blank();
+  out_heading_minor("NOTES");
+  {
+    char line[256];
+    snprintf(line, sizeof(line), "  compact families shown: %zu", compact_lines);
+    out_line(line);
+  }
+  out_line("  use a command alias or canonical id for full command contract details");
+}
+
 /* =========================================================
  * Group help
  * ========================================================= */
 
-static int print_group_help(const char *group)
+/* mode:
+ * 0 = default (truncated)
+ * 1 = full list
+ * 2 = compact families
+ */
+static int print_group_help(const char *group, int mode)
 {
   if (!group || !group[0]) return err_usage("missing group");
 
@@ -556,16 +671,46 @@ static int print_group_help(const char *group)
   for (size_t i = 0; i < lst.len; i++) sorted[i] = (yai_law_command_t *)lst.items[i];
   qsort(sorted, lst.len, sizeof(sorted[0]), cmp_cmd_ptr_by_name);
 
-  for (size_t i = 0; i < lst.len; i++) {
-    const yai_law_command_t *c = sorted[i];
-    if (!c) continue;
-    print_cmd_line(c);
+  if (mode == 2) {
+    print_group_compact_families(sorted, lst.len, group);
+  } else {
+    size_t limit = (mode == 1) ? lst.len : (lst.len > 40 ? 40 : lst.len);
+    for (size_t i = 0; i < limit; i++) {
+      const yai_law_command_t *c = sorted[i];
+      if (!c) continue;
+      print_cmd_line(c);
+    }
+
+    if (mode == 0 && lst.len > limit) {
+      out_blank();
+      out_heading_minor("TRUNCATED");
+      {
+        char line[256];
+        snprintf(line, sizeof(line), "  showing %zu of %zu commands", limit, lst.len);
+        out_line(line);
+      }
+      {
+        char line[256];
+        snprintf(line, sizeof(line), "  full list: yai help %s:all", group);
+        out_line(line);
+      }
+      {
+        char line[256];
+        snprintf(line, sizeof(line), "  compact view: yai help %s:compact", group);
+        out_line(line);
+      }
+    }
   }
 
   out_blank();
   out_heading_minor("SEE ALSO");
   out_line("  yai help");
   out_line("  yai help --all");
+  {
+    char sa[256];
+    snprintf(sa, sizeof(sa), "  yai help %s:compact", group);
+    out_line(sa);
+  }
 
   free(sorted);
   return 0;
@@ -875,6 +1020,38 @@ int yai_porcelain_help_print_any(const char *token)
   if (strcmp(token, "-a") == 0 || strcmp(token, "--all") == 0) return print_all_commands();
   if (strcmp(token, "-g") == 0 || strcmp(token, "--groups") == 0) return print_groups_only();
 
+  /* Explicit full group listing: yai help <group>:all */
+  {
+    const char *suffix = ":all";
+    size_t tlen = strlen(token);
+    size_t slen = strlen(suffix);
+    if (tlen > slen && strcmp(token + (tlen - slen), suffix) == 0) {
+      char group[128];
+      size_t glen = tlen - slen;
+      if (glen < sizeof(group)) {
+        memcpy(group, token, glen);
+        group[glen] = '\0';
+        return print_group_help(group, 1);
+      }
+    }
+  }
+
+  /* Explicit compact group listing: yai help <group>:compact */
+  {
+    const char *suffix = ":compact";
+    size_t tlen = strlen(token);
+    size_t slen = strlen(suffix);
+    if (tlen > slen && strcmp(token + (tlen - slen), suffix) == 0) {
+      char group[128];
+      size_t glen = tlen - slen;
+      if (glen < sizeof(group)) {
+        memcpy(group, token, glen);
+        group[glen] = '\0';
+        return print_group_help(group, 2);
+      }
+    }
+  }
+
   /* Group name? Keep legacy behavior: "yai help <group>" */
   {
     int rc = ensure_registry();
@@ -882,7 +1059,7 @@ int yai_porcelain_help_print_any(const char *token)
 
     yai_law_cmd_list_t lst = yai_law_cmds_by_group(token);
     if (lst.items && lst.len > 0) {
-      return print_group_help(token);
+      return print_group_help(token, 0);
     }
   }
 
