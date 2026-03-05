@@ -33,6 +33,7 @@ LAW_INC_RUNTIME  := $(LAW_DIR)/contracts/protocol/runtime/include
 CFLAGS ?= -Wall -Wextra -O2 -std=c11 -MMD -MP
 CFLAGS += -I$(ROOT_DIR)/include
 CFLAGS += -I$(SDK_INC)
+CFLAGS += -I$(SDK_DIR)/third_party/cjson
 CFLAGS += -I$(LAW_INC_PROTOCOL) -I$(LAW_INC_VAULT) -I$(LAW_INC_RUNTIME)
 
 LDFLAGS ?=
@@ -46,6 +47,8 @@ SRCS := \
   src/porcelain/porcelain_help.c \
   src/porcelain/porcelain_output.c \
   src/porcelain/porcelain_parse.c \
+  src/porcelain/control_call_build.c \
+  src/porcelain/lifecycle.c \
   src/porcelain/response_render.c \
   src/util/fmt.c
 

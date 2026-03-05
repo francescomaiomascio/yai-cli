@@ -5,41 +5,47 @@
 #include <stdio.h>
 #include <string.h>
 
-static int render(const yai_exec_result_t *out, int rc, int verbose)
+int yai_render_exec_short(const yai_sdk_reply_t *out, int rc)
 {
-  if (!out || !out->status || !out->code_name || !out->reason) return 0;
+  if (!out || !out->status[0] || !out->code[0] || !out->reason[0]) return 0;
   FILE *stream = (rc == 0) ? stdout : stderr;
-
-  if (!verbose) {
-    if (strcmp(out->status, "ok") == 0) {
-      fprintf(stream, "yai: %s\n", out->reason);
-      return 1;
-    }
-    if (strcmp(out->status, "nyi") == 0) {
-      fprintf(stream, "yai: not implemented: %s\n", out->reason);
-      return 1;
-    }
-    fprintf(stream, "yai: error (%s): %s\n", out->code_name, out->reason);
+  if (strcmp(out->status, "ok") == 0) {
+    fprintf(stream, "yai: %s\n", out->reason);
     return 1;
   }
-
-  fprintf(stream,
-          "yai: %s: %s: %s (command_id=%s, trace_id=%s, target_plane=%s)\n",
-          out->status,
-          out->code_name,
-          out->reason,
-          (out->command_id && out->command_id[0]) ? out->command_id : "yai.unknown.unknown",
-          out->trace_id ? out->trace_id : "",
-          (out->target_plane && out->target_plane[0]) ? out->target_plane : "kernel");
+  if (strcmp(out->status, "nyi") == 0) {
+    fprintf(stream, "yai: nyi (%s): %s\n", out->code, out->reason);
+    return 1;
+  }
+  fprintf(stream, "yai: error (%s): %s\n", out->code, out->reason);
   return 1;
 }
 
-int yai_render_exec_short(const yai_exec_result_t *out, int rc)
+int yai_render_exec_verbose(const yai_sdk_reply_t *out, int rc, const char *control_call_json)
 {
-  return render(out, rc, 0);
+  if (!out || !out->exec_reply_json) return 0;
+  FILE *stream = (rc == 0) ? stdout : stderr;
+  fprintf(stream, "control_call: %s\n", control_call_json ? control_call_json : "{}");
+  fprintf(stream, "exec_reply: %s\n", out->exec_reply_json);
+  return 1;
 }
 
-int yai_render_exec_verbose(const yai_exec_result_t *out, int rc)
+int yai_render_exec_json(const yai_sdk_reply_t *out)
 {
-  return render(out, rc, 1);
+  if (!out || !out->exec_reply_json) return 0;
+  printf("%s\n", out->exec_reply_json);
+  return 1;
+}
+
+int yai_render_exec_exit_code(const yai_sdk_reply_t *out, int sdk_rc)
+{
+  if (!out || !out->status[0] || !out->code[0]) {
+    return (sdk_rc == 0) ? 0 : 50;
+  }
+  if (strcmp(out->status, "ok") == 0 && strcmp(out->code, "OK") == 0) return 0;
+  if (strcmp(out->status, "nyi") == 0 || strcmp(out->code, "NOT_IMPLEMENTED") == 0) return 10;
+  if (strcmp(out->code, "BAD_ARGS") == 0 || strcmp(out->code, "INVALID_TARGET") == 0) return 20;
+  if (strcmp(out->code, "UNAUTHORIZED") == 0) return 30;
+  if (strcmp(out->code, "SERVER_UNAVAILABLE") == 0 || strcmp(out->code, "RUNTIME_NOT_READY") == 0) return 40;
+  return 50;
 }

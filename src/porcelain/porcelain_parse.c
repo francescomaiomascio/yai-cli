@@ -10,6 +10,9 @@
 static void req_zero(yai_porcelain_request_t* r) {
   memset(r, 0, sizeof(*r));
   r->kind = YAI_PORCELAIN_KIND_NONE;
+  r->ws_id = "default";
+  r->role = "operator";
+  r->arming = 1;
 }
 
 static int set_err(yai_porcelain_request_t* r, const char* msg) {
@@ -48,7 +51,8 @@ static int global_option_takes_value(const char* s) {
   return (
     strcmp(s, "--ws") == 0 ||
     strcmp(s, "--timeout-ms") == 0 ||
-    strcmp(s, "--role") == 0
+    strcmp(s, "--role") == 0 ||
+    strcmp(s, "--arming") == 0
   );
 }
 
@@ -60,6 +64,34 @@ static int has_verbose_contract_flag(int argc, char **argv)
     }
   }
   return 0;
+}
+
+static int has_json_flag(int argc, char **argv)
+{
+  for (int i = 1; i < argc; i++) {
+    if (argv && argv[i] && strcmp(argv[i], "--json") == 0) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static const char* find_global_value(int argc, char **argv, const char *flag)
+{
+  for (int i = 1; i + 1 < argc; i++) {
+    if (argv && argv[i] && strcmp(argv[i], flag) == 0) {
+      return argv[i + 1];
+    }
+  }
+  return NULL;
+}
+
+static int find_global_arming(int argc, char **argv, int fallback)
+{
+  const char *v = find_global_value(argc, argv, "--arming");
+  if (!v || !v[0]) return fallback;
+  if (strcmp(v, "0") == 0 || strcmp(v, "false") == 0 || strcmp(v, "off") == 0) return 0;
+  return 1;
 }
 
 /* Group abbreviations (UX layer). */
@@ -185,6 +217,12 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
   /* Determine where the command starts, allowing global options before it. */
   int cmdi = find_command_start(argc, argv);
   req->verbose_contract = has_verbose_contract_flag(argc, argv);
+  req->json_output = has_json_flag(argc, argv);
+  req->ws_id = find_global_value(argc, argv, "--ws");
+  if (!req->ws_id || !req->ws_id[0]) req->ws_id = "default";
+  req->role = find_global_value(argc, argv, "--role");
+  if (!req->role || !req->role[0]) req->role = "operator";
+  req->arming = find_global_arming(argc, argv, 1);
   if (cmdi < 0 || cmdi >= argc || !argv[cmdi]) {
     return set_err(req, "invalid global options (missing value)");
   }
