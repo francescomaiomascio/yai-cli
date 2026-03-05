@@ -35,6 +35,9 @@ static int is_version_token(const char* s) {
 static int is_global_option(const char* s) {
   if (!s || s[0] != '-') return 0;
   return (
+    strcmp(s, "--verbose") == 0 ||
+    strcmp(s, "-v") == 0 ||
+    strcmp(s, "--no-color") == 0 ||
     strcmp(s, "--ws") == 0 ||
     strcmp(s, "--json") == 0 ||
     strcmp(s, "--verbose-contract") == 0 ||
@@ -71,6 +74,28 @@ static int has_json_flag(int argc, char **argv)
 {
   for (int i = 1; i < argc; i++) {
     if (argv && argv[i] && strcmp(argv[i], "--json") == 0) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static int has_verbose_flag(int argc, char **argv)
+{
+  for (int i = 1; i < argc; i++) {
+    if (!argv || !argv[i]) continue;
+    if (strcmp(argv[i], "--verbose") == 0 || strcmp(argv[i], "-v") == 0) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static int has_no_color_flag(int argc, char **argv)
+{
+  for (int i = 1; i < argc; i++) {
+    if (!argv || !argv[i]) continue;
+    if (strcmp(argv[i], "--no-color") == 0) {
       return 1;
     }
   }
@@ -218,7 +243,9 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
   /* Determine where the command starts, allowing global options before it. */
   int cmdi = find_command_start(argc, argv);
   req->verbose_contract = has_verbose_contract_flag(argc, argv);
+  req->verbose = has_verbose_flag(argc, argv);
   req->json_output = has_json_flag(argc, argv);
+  req->no_color = has_no_color_flag(argc, argv);
   req->ws_id = find_global_value(argc, argv, "--ws");
   if (!req->ws_id || !req->ws_id[0]) req->ws_id = "default";
   req->role = find_global_value(argc, argv, "--role");

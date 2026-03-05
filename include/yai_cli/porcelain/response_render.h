@@ -7,8 +7,16 @@
 extern "C" {
 #endif
 
-int yai_render_exec_short(const yai_sdk_reply_t *out, int rc);
-int yai_render_exec_verbose(const yai_sdk_reply_t *out, int rc, const char *control_call_json);
+typedef struct yai_render_opts {
+  int use_color;
+  const char *command_id;
+  int argc;
+  char **argv;
+} yai_render_opts_t;
+
+int yai_render_exec_short(const yai_sdk_reply_t *out, int rc, const yai_render_opts_t *opts);
+int yai_render_exec_verbose(const yai_sdk_reply_t *out, int rc, const yai_render_opts_t *opts);
+int yai_render_exec_contract_verbose(const yai_sdk_reply_t *out, int rc, const char *control_call_json);
 int yai_render_exec_json(const yai_sdk_reply_t *out);
 int yai_render_exec_exit_code(const yai_sdk_reply_t *out, int sdk_rc);
 

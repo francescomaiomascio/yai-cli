@@ -8,6 +8,7 @@
 #include "yai_cli/porcelain/response_render.h"
 #include "yai_cli/porcelain/control_call_build.h"
 #include "yai_cli/porcelain/lifecycle.h"
+#include "yai_cli/porcelain/color.h"
 #include "yai_sdk/public.h"
 
 #include <stdio.h>
@@ -136,12 +137,20 @@ int yai_porcelain_run(int argc, char **argv)
         ensure_exec_reply_json(&reply);
 
         int rendered = 0;
+        yai_render_opts_t ropts = {
+          .use_color = yai_color_enabled((sdk_rc == 0) ? stdout : stderr, req.no_color),
+          .command_id = req.command_id,
+          .argc = req.cmd_argc,
+          .argv = req.cmd_argv,
+        };
         if (req.json_output) {
           rendered = yai_render_exec_json(&reply);
         } else if (req.verbose_contract) {
-          rendered = yai_render_exec_verbose(&reply, sdk_rc, control_call_json);
+          rendered = yai_render_exec_contract_verbose(&reply, sdk_rc, control_call_json);
+        } else if (req.verbose) {
+          rendered = yai_render_exec_verbose(&reply, sdk_rc, &ropts);
         } else {
-          rendered = yai_render_exec_short(&reply, sdk_rc);
+          rendered = yai_render_exec_short(&reply, sdk_rc, &ropts);
         }
         if (!rendered) {
           yai_porcelain_err_print(YAI_PORCELAIN_ERR_GENERIC, "execution failed");

@@ -47,6 +47,8 @@ SRCS := \
   src/porcelain/porcelain_help.c \
   src/porcelain/porcelain_output.c \
   src/porcelain/porcelain_parse.c \
+  src/porcelain/color.c \
+  src/porcelain/display_map.c \
   src/porcelain/control_call_build.c \
   src/porcelain/lifecycle.c \
   src/porcelain/response_render.c \
@@ -114,6 +116,8 @@ test: sdk $(TARGET) $(UNIT_TEST_BIN) $(VECTORS_TEST_BIN)
 	@$(VECTORS_TEST_BIN)
 	@echo "[TEST] tests/integration/ghost_guardrail.sh"
 	@tests/integration/ghost_guardrail.sh
+	@echo "[TEST] tests/integration/porcelain_v1_guardrail.sh"
+	@tests/integration/porcelain_v1_guardrail.sh
 	@echo "--- [YAI-CLI] Tests Complete ---"
 
 $(UNIT_TEST_BIN): tests/unit/parse_test.c | dirs sdk
