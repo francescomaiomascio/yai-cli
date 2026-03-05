@@ -52,11 +52,38 @@ static void test_invalid_group(void)
     assert(strcmp(req.error_hint, "yai help --groups") == 0);
 }
 
+static void test_help_group_command(void)
+{
+    char *argv[] = {"yai", "help", "root", "ping", NULL};
+    yai_porcelain_request_t req;
+    int rc = yai_porcelain_parse_argv(4, argv, &req);
+    assert(rc == 0);
+    assert(req.kind == YAI_PORCELAIN_KIND_HELP);
+    assert(req.help_token != NULL);
+    assert(strcmp(req.help_token, "root") == 0);
+    assert(req.help_token2 != NULL);
+    assert(strcmp(req.help_token2, "ping") == 0);
+}
+
+static void test_watch_parse(void)
+{
+    char *argv[] = {"yai", "watch", "root", "ping", NULL};
+    yai_porcelain_request_t req;
+    int rc = yai_porcelain_parse_argv(4, argv, &req);
+    assert(rc == 0);
+    assert(req.kind == YAI_PORCELAIN_KIND_WATCH);
+    assert(req.cmd_argc == 2);
+    assert(strcmp(req.cmd_argv[0], "root") == 0);
+    assert(strcmp(req.cmd_argv[1], "ping") == 0);
+}
+
 int main(void)
 {
     test_valid_root_ping();
     test_valid_verbose_contract();
     test_builtin_lifecycle();
     test_invalid_group();
+    test_help_group_command();
+    test_watch_parse();
     return 0;
 }

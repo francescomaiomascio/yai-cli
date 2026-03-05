@@ -12,10 +12,10 @@ extern "C" {
 #define YAI_COLOR_YELLOW "\x1b[33m"
 #define YAI_COLOR_RED "\x1b[31m"
 #define YAI_COLOR_CYAN "\x1b[36m"
+#define YAI_COLOR_BOLD "\x1b[1m"
 
 int yai_color_enabled(FILE *stream, int no_color_flag);
 
 #ifdef __cplusplus
 }
 #endif
-

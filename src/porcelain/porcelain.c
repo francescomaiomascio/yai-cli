@@ -9,6 +9,8 @@
 #include "yai_cli/porcelain/control_call_build.h"
 #include "yai_cli/porcelain/lifecycle.h"
 #include "yai_cli/porcelain/color.h"
+#include "yai_cli/watch/watch_mode.h"
+#include "yai_cli/util/terminal.h"
 #include "yai_sdk/public.h"
 
 #include <stdio.h>
@@ -85,7 +87,7 @@ int yai_porcelain_run(int argc, char **argv)
 
   switch (req.kind) {
     case YAI_PORCELAIN_KIND_HELP:
-      return yai_porcelain_help_print_any(req.help_token);
+      return yai_porcelain_help_print(req.help_token, req.help_token2, req.pager, req.no_pager);
 
     case YAI_PORCELAIN_KIND_LAW:
       return yai_cmd_law(req.law_argc, req.law_argv);
@@ -93,7 +95,11 @@ int yai_porcelain_run(int argc, char **argv)
     case YAI_PORCELAIN_KIND_COMMAND:
       if (is_helpish_command_invocation(req.cmd_argc, req.cmd_argv)) {
         /* resolved command id -> show contract help */
-        return yai_porcelain_help_print_any(req.command_id);
+        return yai_porcelain_help_print(req.command_id, NULL, req.pager, req.no_pager);
+      }
+      if (req.interactive && !yai_term_is_tty()) {
+        yai_porcelain_err_print(YAI_PORCELAIN_ERR_USAGE, "--interactive requires a TTY");
+        return 20;
       }
       {
         yai_sdk_reply_t reply = {0};
@@ -163,6 +169,13 @@ int yai_porcelain_run(int argc, char **argv)
         yai_sdk_reply_free(&reply);
         return exit_code;
       }
+
+    case YAI_PORCELAIN_KIND_WATCH:
+      if (req.interactive && !yai_term_is_tty()) {
+        yai_porcelain_err_print(YAI_PORCELAIN_ERR_USAGE, "--interactive requires a TTY");
+        return 20;
+      }
+      return yai_watch_mode_run(req.cmd_argc, req.cmd_argv, 1);
 
     case YAI_PORCELAIN_KIND_ERROR:
       return err_usage_with_hint(req.error, req.error_hint, req.verbose_contract);

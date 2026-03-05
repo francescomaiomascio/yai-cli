@@ -52,6 +52,10 @@ SRCS := \
   src/porcelain/control_call_build.c \
   src/porcelain/lifecycle.c \
   src/porcelain/response_render.c \
+  src/help/help_registry.c \
+  src/watch/watch_mode.c \
+  src/util/terminal.c \
+  src/util/pager.c \
   src/util/fmt.c
 
 OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
@@ -118,6 +122,8 @@ test: sdk $(TARGET) $(UNIT_TEST_BIN) $(VECTORS_TEST_BIN)
 	@tests/integration/ghost_guardrail.sh
 	@echo "[TEST] tests/integration/porcelain_v1_guardrail.sh"
 	@tests/integration/porcelain_v1_guardrail.sh
+	@echo "[TEST] tests/integration/help_watch_guardrail.sh"
+	@tests/integration/help_watch_guardrail.sh
 	@echo "--- [YAI-CLI] Tests Complete ---"
 
 $(UNIT_TEST_BIN): tests/unit/parse_test.c | dirs sdk

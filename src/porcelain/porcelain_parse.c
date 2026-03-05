@@ -38,6 +38,9 @@ static int is_global_option(const char* s) {
     strcmp(s, "--verbose") == 0 ||
     strcmp(s, "-v") == 0 ||
     strcmp(s, "--no-color") == 0 ||
+    strcmp(s, "--pager") == 0 ||
+    strcmp(s, "--no-pager") == 0 ||
+    strcmp(s, "--interactive") == 0 ||
     strcmp(s, "--ws") == 0 ||
     strcmp(s, "--json") == 0 ||
     strcmp(s, "--verbose-contract") == 0 ||
@@ -98,6 +101,33 @@ static int has_no_color_flag(int argc, char **argv)
     if (strcmp(argv[i], "--no-color") == 0) {
       return 1;
     }
+  }
+  return 0;
+}
+
+static int has_pager_flag(int argc, char **argv)
+{
+  for (int i = 1; i < argc; i++) {
+    if (!argv || !argv[i]) continue;
+    if (strcmp(argv[i], "--pager") == 0) return 1;
+  }
+  return 0;
+}
+
+static int has_no_pager_flag(int argc, char **argv)
+{
+  for (int i = 1; i < argc; i++) {
+    if (!argv || !argv[i]) continue;
+    if (strcmp(argv[i], "--no-pager") == 0) return 1;
+  }
+  return 0;
+}
+
+static int has_interactive_flag(int argc, char **argv)
+{
+  for (int i = 1; i < argc; i++) {
+    if (!argv || !argv[i]) continue;
+    if (strcmp(argv[i], "--interactive") == 0) return 1;
   }
   return 0;
 }
@@ -231,6 +261,7 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
   if (is_help_token(argv[1])) {
     req->kind = YAI_PORCELAIN_KIND_HELP;
     req->help_token = (2 < argc) ? argv[2] : NULL;
+    req->help_token2 = (3 < argc) ? argv[3] : NULL;
     return 0;
   }
 
@@ -246,6 +277,9 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
   req->verbose = has_verbose_flag(argc, argv);
   req->json_output = has_json_flag(argc, argv);
   req->no_color = has_no_color_flag(argc, argv);
+  req->pager = has_pager_flag(argc, argv);
+  req->no_pager = has_no_pager_flag(argc, argv);
+  req->interactive = has_interactive_flag(argc, argv);
   req->ws_id = find_global_value(argc, argv, "--ws");
   if (!req->ws_id || !req->ws_id[0]) req->ws_id = "default";
   req->role = find_global_value(argc, argv, "--role");
@@ -259,6 +293,7 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
   if (is_help_token(argv[cmdi])) {
     req->kind = YAI_PORCELAIN_KIND_HELP;
     req->help_token = (cmdi + 1 < argc) ? argv[cmdi + 1] : NULL;
+    req->help_token2 = (cmdi + 2 < argc) ? argv[cmdi + 2] : NULL;
     return 0;
   }
 
@@ -281,6 +316,7 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
   if (strcmp(argv[cmdi], "help") == 0) {
     req->kind = YAI_PORCELAIN_KIND_HELP;
     req->help_token = (cmdi + 1 < argc) ? argv[cmdi + 1] : NULL;
+    req->help_token2 = (cmdi + 2 < argc) ? argv[cmdi + 2] : NULL;
     return 0;
   }
 
@@ -297,6 +333,16 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
     req->kind = YAI_PORCELAIN_KIND_COMMAND;
     req->cmd_argc = argc - (cmdi + 2);
     req->cmd_argv = &argv[cmdi + 2];
+    return 0;
+  }
+
+  if (strcmp(argv[cmdi], "watch") == 0) {
+    if (cmdi + 1 >= argc || !argv[cmdi + 1]) {
+      return set_err(req, "missing watch command", "yai watch <group> <command>");
+    }
+    req->kind = YAI_PORCELAIN_KIND_WATCH;
+    req->cmd_argc = argc - (cmdi + 1);
+    req->cmd_argv = &argv[cmdi + 1];
     return 0;
   }
 

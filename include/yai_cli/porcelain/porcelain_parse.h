@@ -12,6 +12,7 @@ typedef enum yai_porcelain_kind_e {
   YAI_PORCELAIN_KIND_HELP,
   YAI_PORCELAIN_KIND_LAW,     // "yai law ..."
   YAI_PORCELAIN_KIND_COMMAND, // "yai <group> <name> ..."
+  YAI_PORCELAIN_KIND_WATCH,   // "yai watch <group> <name> ..."
   YAI_PORCELAIN_KIND_ERROR
 } yai_porcelain_kind_t;
 
@@ -20,6 +21,7 @@ typedef struct yai_porcelain_request_s {
 
   // For HELP:
   const char* help_token;
+  const char* help_token2;
 
   // For COMMAND:
   const char* command_id;
@@ -27,6 +29,9 @@ typedef struct yai_porcelain_request_s {
   int verbose;
   int json_output;
   int no_color;
+  int pager;
+  int no_pager;
+  int interactive;
   const char* ws_id;
   const char* role;
   int arming;
