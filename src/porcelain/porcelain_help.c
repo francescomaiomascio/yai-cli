@@ -2,9 +2,9 @@
 
 #include "yai_cli/porcelain/porcelain_help.h"
 
-#include "yai_cli/help/help_registry.h"
 #include "yai_cli/porcelain/porcelain_errors.h"
 #include "yai_cli/util/pager.h"
+#include "yai_sdk/registry/command_catalog.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -107,15 +107,15 @@ static int help_error(const char *msg, const char *hint)
   return yai_porcelain_err_exit_code(YAI_PORCELAIN_ERR_USAGE);
 }
 
-static void render_group_lines(const yai_help_index_t *idx, strbuf_t *sb)
+static void render_group_lines(const yai_sdk_command_catalog_t *idx, strbuf_t *sb)
 {
   for (size_t i = 0; i < idx->group_count; i++) {
-    const yai_help_group_t *g = &idx->groups[i];
+    const yai_sdk_command_group_t *g = &idx->groups[i];
     sb_appendf(sb, "  %-12s %s\n", g->group, group_desc(g->group));
   }
 }
 
-static int render_global_help(const yai_help_index_t *idx, strbuf_t *sb)
+static int render_global_help(const yai_sdk_command_catalog_t *idx, strbuf_t *sb)
 {
   sb_appendf(sb, "YAI Operator CLI\n\n");
   sb_appendf(sb, "Usage:\n");
@@ -128,33 +128,34 @@ static int render_global_help(const yai_help_index_t *idx, strbuf_t *sb)
   return 0;
 }
 
-static int render_group_help(const yai_help_group_t *g, strbuf_t *sb)
+static int render_group_help(const yai_sdk_command_group_t *g, strbuf_t *sb)
 {
   if (!g) return help_error("unknown group", "try: yai help --groups");
   sb_appendf(sb, "%s\n\n", g->group);
   sb_appendf(sb, "%s\n\n", group_desc(g->group));
   sb_appendf(sb, "Commands:\n");
   for (size_t i = 0; i < g->command_count; i++) {
-    sb_appendf(sb, "  %-22s %s\n", g->commands[i].command, g->commands[i].description);
+    sb_appendf(sb, "  %-22s %s\n", g->commands[i].name, g->commands[i].summary);
   }
   return 0;
 }
 
-static int render_command_help(const yai_help_command_t *c, strbuf_t *sb)
+static int render_command_help(const yai_sdk_command_ref_t *c, strbuf_t *sb)
 {
   if (!c) return help_error("unknown command", "try: yai help <group>");
   sb_appendf(sb, "Command:\n");
-  sb_appendf(sb, "  %s %s\n\n", c->group, c->command);
+  sb_appendf(sb, "  %s %s\n\n", c->group, c->name);
   sb_appendf(sb, "Description:\n");
-  sb_appendf(sb, "  %s\n\n", c->description);
+  sb_appendf(sb, "  %s\n\n", c->summary);
   sb_appendf(sb, "Usage:\n");
-  sb_appendf(sb, "  yai %s %s\n", c->group, c->command);
+  sb_appendf(sb, "  yai %s %s\n", c->group, c->name);
+  sb_appendf(sb, "  canonical_id: %s\n", c->id);
   return 0;
 }
 
 int yai_porcelain_help_print(const char *token1, const char *token2, int pager, int no_pager)
 {
-  yai_help_index_t idx;
+  yai_sdk_command_catalog_t idx;
   strbuf_t sb = {0};
   int rc;
 
@@ -162,7 +163,7 @@ int yai_porcelain_help_print(const char *token1, const char *token2, int pager, 
     return print_version();
   }
 
-  rc = yai_help_registry_load(&idx);
+  rc = yai_sdk_command_catalog_load(&idx);
   if (rc != 0) {
     yai_porcelain_err_print(YAI_PORCELAIN_ERR_DEP_MISSING, "registry unavailable (deps/yai-law unreadable or invalid)");
     return yai_porcelain_err_exit_code(YAI_PORCELAIN_ERR_DEP_MISSING);
@@ -176,18 +177,18 @@ int yai_porcelain_help_print(const char *token1, const char *token2, int pager, 
     rc = 0;
   } else if (strcmp(token1, "--all") == 0 || strcmp(token1, "-a") == 0) {
     for (size_t i = 0; i < idx.group_count; i++) {
-      const yai_help_group_t *g = &idx.groups[i];
+      const yai_sdk_command_group_t *g = &idx.groups[i];
       for (size_t j = 0; j < g->command_count; j++) {
-        sb_appendf(&sb, "%s-%s\n", g->group, g->commands[j].command);
+        sb_appendf(&sb, "%s-%s\n", g->group, g->commands[j].name);
       }
     }
     rc = 0;
   } else if (strncmp(token1, "yai.", 4) == 0) {
-    rc = render_command_help(yai_help_registry_find_by_id(&idx, token1), &sb);
+    rc = render_command_help(yai_sdk_command_catalog_find_by_id(&idx, token1), &sb);
   } else if (token2 && token2[0]) {
-    rc = render_command_help(yai_help_registry_find_command(&idx, token1, token2), &sb);
+    rc = render_command_help(yai_sdk_command_catalog_find_command(&idx, token1, token2), &sb);
   } else {
-    const yai_help_group_t *g = yai_help_registry_find_group(&idx, token1);
+    const yai_sdk_command_group_t *g = yai_sdk_command_catalog_find_group(&idx, token1);
     if (g) {
       rc = render_group_help(g, &sb);
     } else {
@@ -198,7 +199,7 @@ int yai_porcelain_help_print(const char *token1, const char *token2, int pager, 
         if (glen < sizeof(group)) {
           memcpy(group, token1, glen);
           group[glen] = '\0';
-          rc = render_command_help(yai_help_registry_find_command(&idx, group, dash + 1), &sb);
+          rc = render_command_help(yai_sdk_command_catalog_find_command(&idx, group, dash + 1), &sb);
         } else {
           rc = help_error("unknown help topic", "try: yai help --groups");
         }
@@ -212,7 +213,7 @@ int yai_porcelain_help_print(const char *token1, const char *token2, int pager, 
     yai_cli_page_if_needed(sb.buf, pager, no_pager);
   }
   sb_free(&sb);
-  yai_help_registry_free(&idx);
+  yai_sdk_command_catalog_free(&idx);
   return rc;
 }
 

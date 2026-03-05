@@ -25,6 +25,13 @@ static int env_pager_enabled(void)
   return (strcmp(v, "1") == 0 || strcmp(v, "true") == 0) ? 1 : 0;
 }
 
+static int env_no_pager_enabled(void)
+{
+  const char *v = getenv("YAI_NO_PAGER");
+  if (!v) return 0;
+  return (strcmp(v, "1") == 0 || strcmp(v, "true") == 0) ? 1 : 0;
+}
+
 void yai_cli_page_if_needed(const char *text, int force_pager, int no_pager)
 {
   int lines;
@@ -34,7 +41,7 @@ void yai_cli_page_if_needed(const char *text, int force_pager, int no_pager)
   char tmp[256];
   char cmd[320];
   if (!text) return;
-  if (no_pager) {
+  if (no_pager || env_no_pager_enabled()) {
     fputs(text, stdout);
     return;
   }

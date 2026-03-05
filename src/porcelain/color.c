@@ -12,6 +12,7 @@ int yai_color_enabled(FILE *stream, int no_color_flag)
   if (!stream) return 0;
   if (no_color_flag) return 0;
   if (getenv("NO_COLOR") != NULL) return 0;
+  if (getenv("YAI_NO_COLOR") != NULL) return 0;
   if (stream == stderr) fd = STDERR_FILENO;
   return isatty(fd) ? 1 : 0;
 }
