@@ -48,7 +48,7 @@ static int err_usage_with_hint(const char *detail)
   return yai_porcelain_err_exit_code(YAI_PORCELAIN_ERR_USAGE);
 }
 
-static int print_normalized_exec_error(const char *msg)
+static int print_normalized_exec_line(const char *msg, int rc)
 {
   if (!msg || !msg[0]) return 0;
 
@@ -72,7 +72,8 @@ static int print_normalized_exec_error(const char *msg)
   memcpy(status, payload, s_len);
   memcpy(code, c1 + 1, code_len);
   snprintf(reason, sizeof(reason), "%s", c2 + 1);
-  fprintf(stderr, "yai: %s: %s: %s\n", status, code, reason);
+  FILE *stream = (rc == 0) ? stdout : stderr;
+  fprintf(stream, "yai: %s: %s: %s\n", status, code, reason);
   return 1;
 }
 
@@ -107,8 +108,8 @@ int yai_porcelain_run(int argc, char **argv)
         };
         yai_exec_result_t out = {0};
         int rc = yai_sdk_execute(&sdk_req, &out);
-        if (rc != 0 && out.message && out.message[0]) {
-          if (!print_normalized_exec_error(out.message)) {
+        if (out.message && out.message[0]) {
+          if (!print_normalized_exec_line(out.message, rc) && rc != 0) {
             yai_porcelain_err_print(YAI_PORCELAIN_ERR_GENERIC, out.message);
           }
         }
