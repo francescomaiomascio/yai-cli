@@ -3,6 +3,7 @@
 #include "yai_cli/porcelain/response_render.h"
 
 #include <stdio.h>
+#include <string.h>
 
 static int render(const yai_exec_result_t *out, int rc, int verbose)
 {
@@ -10,7 +11,15 @@ static int render(const yai_exec_result_t *out, int rc, int verbose)
   FILE *stream = (rc == 0) ? stdout : stderr;
 
   if (!verbose) {
-    fprintf(stream, "yai: %s: %s: %s\n", out->status, out->code_name, out->reason);
+    if (strcmp(out->status, "ok") == 0) {
+      fprintf(stream, "yai: %s\n", out->reason);
+      return 1;
+    }
+    if (strcmp(out->status, "nyi") == 0) {
+      fprintf(stream, "yai: not implemented: %s\n", out->reason);
+      return 1;
+    }
+    fprintf(stream, "yai: error (%s): %s\n", out->code_name, out->reason);
     return 1;
   }
 
