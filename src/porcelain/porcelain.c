@@ -7,6 +7,7 @@
 #include "yai_cli/porcelain/porcelain_errors.h"
 #include "yai_sdk/public.h"
 
+#include <stdio.h>
 #include <string.h>
 
 /* Legacy hook: law command stays separate for now */
@@ -47,6 +48,34 @@ static int err_usage_with_hint(const char *detail)
   return yai_porcelain_err_exit_code(YAI_PORCELAIN_ERR_USAGE);
 }
 
+static int print_normalized_exec_error(const char *msg)
+{
+  if (!msg || !msg[0]) return 0;
+
+  const char *pfx = "yai-sdk: ";
+  size_t pfx_len = strlen(pfx);
+  if (strncmp(msg, pfx, pfx_len) != 0) return 0;
+
+  const char *payload = msg + pfx_len;
+  const char *c1 = strchr(payload, ':');
+  if (!c1) return 0;
+  const char *c2 = strchr(c1 + 1, ':');
+  if (!c2) return 0;
+
+  char status[24] = {0};
+  char code[64] = {0};
+  char reason[192] = {0};
+  size_t s_len = (size_t)(c1 - payload);
+  size_t code_len = (size_t)(c2 - (c1 + 1));
+  if (s_len == 0 || s_len >= sizeof(status) || code_len == 0 || code_len >= sizeof(code)) return 0;
+
+  memcpy(status, payload, s_len);
+  memcpy(code, c1 + 1, code_len);
+  snprintf(reason, sizeof(reason), "%s", c2 + 1);
+  fprintf(stderr, "yai: %s: %s: %s\n", status, code, reason);
+  return 1;
+}
+
 int yai_porcelain_run(int argc, char **argv)
 {
   yai_porcelain_request_t req;
@@ -79,7 +108,9 @@ int yai_porcelain_run(int argc, char **argv)
         yai_exec_result_t out = {0};
         int rc = yai_sdk_execute(&sdk_req, &out);
         if (rc != 0 && out.message && out.message[0]) {
-          yai_porcelain_err_print(YAI_PORCELAIN_ERR_GENERIC, out.message);
+          if (!print_normalized_exec_error(out.message)) {
+            yai_porcelain_err_print(YAI_PORCELAIN_ERR_GENERIC, out.message);
+          }
         }
         return rc;
       }
