@@ -1,6 +1,6 @@
 # yai-cli Documentation
 
-This directory is the documentation entrypoint for operator usage, contract references, and repository governance for `yai-cli`.
+This directory is the documentation entrypoint for the YAI command surface, contract references, and repository governance for `yai-cli`.
 
 ## Documentation map
 

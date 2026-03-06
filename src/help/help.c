@@ -124,11 +124,11 @@ static int print_version(void)
 static int render_global_help(const yai_sdk_command_catalog_t *idx, strbuf_t *sb, int all)
 {
   (void)idx;
-  sb_appendf(sb, "YAI Operator CLI\n\n");
+  sb_appendf(sb, "YAI Command Surface\n\n");
   sb_appendf(sb, "Usage:\n");
   sb_appendf(sb, "  yai <entrypoint> <topic> [op] [options]\n");
   sb_appendf(sb, "  yai help <entrypoint> [topic] [op]\n\n");
-  sb_appendf(sb, "Main Operator Commands:\n");
+  sb_appendf(sb, "Main Surface Commands:\n");
   sb_appendf(sb, "  ws           workspace lifecycle\n");
   sb_appendf(sb, "  run          runtime execution and control\n");
   sb_appendf(sb, "  gov          governance operations\n");

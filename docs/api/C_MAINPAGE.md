@@ -1,4 +1,4 @@
-# YAI CLI API (Contracts)
+# YAI Command Surface API (Contracts)
 
 These docs are generated from the public headers and CLI sources in this repo.
 They describe the CLI-facing contracts and how commands map to the control plane.

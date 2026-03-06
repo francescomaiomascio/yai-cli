@@ -2,7 +2,12 @@
 
 YAI CLI execution output has 4 canonical modes.
 
-## `default` (human/porcelain)
+- `default` (human): concise command-surface output.
+- `--verbose` (human): default output plus `Details:` block.
+- `--verbose-contract` (audit): exactly two lines:
+  - `control_call: {...}`
+  - `exec_reply: {...}`
+- `--json` (machine): exactly one JSON object, no prefixes.
 
 Shape:
 

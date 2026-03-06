@@ -1,76 +1,58 @@
-# CLI Usage
+# CLI Guide
 
-`yai` is the operator CLI for runtime control and governance surfaces.
+## Command Grammar
 
-Basic form:
+YAI command surface help/navigation follows:
 
-`yai <group> <command> [options]`
+`yai <entrypoint> <topic> [op] [options]`
+
+## Help Navigation
+
+- `yai --help` / `yai help`: surface entrypoints
+- `yai help --all`: surface + ancillary
+- `yai help --plumbing`: includes plumbing/internal
+- `yai help <entrypoint>`
+- `yai help <entrypoint> <topic>`
+- `yai help <entrypoint> <topic> <op>`
+
+## Legacy Compatibility
+
+Legacy names can be resolved as aliases where possible.
+When legacy input is not canonical, help suggests the canonical entrypoint/topic/op path.
+
+## Workspace Context Mode
+
+- `yai ws use <ws-id>`: attach current workspace context
+- `yai ws current`: show attached workspace
+- `yai ws clear`: clear attached workspace
+- `yai ws use <other-ws-id>`: explicit workspace switch
+
+Workspace resolution precedence:
+
+1. explicit `--ws-id`
+2. attached current workspace
+3. error: no workspace selected (for workspace-scoped commands)
 
 ## Output Modes
 
-- default: human one-line output
-- `--verbose`: human line + metadata (`status/code/reason/ids`)
-- `--json`: raw `exec_reply` JSON
-- `--verbose-contract`: two lines (`control_call`, `exec_reply`)
-
-## Help System
-
-Help is registry-driven and generated from `deps/yai-law/registry/commands.v1.json`.
-
-Supported forms:
-
-- `yai help`
-- `yai help <group>`
-- `yai help <group> <command>`
-- `yai help yai.<group>.<command>`
-- `yai help --groups`
-- `yai help --all`
+- default human: concise subject + outcome (+ optional summary/hint)
+- `--verbose`: adds `Details:` and optional `Trace: ...`
+- `--verbose-contract`: strict audit channel (`control_call`, `exec_reply`)
+- `--json`: raw machine JSON only
+- color policy: `--color=auto|always|never` and `--no-color`
 
 ## Watch Mode
 
-Live refresh mode:
+- `yai watch <entrypoint> <topic> [op] [args...]`
+- `--interval-ms <ms>` controls refresh rate
+- `--count <n>` runs a bounded number of iterations
 
-`yai watch <group> <command> [args...]`
+Interactive controls:
 
-Flags:
+- `q` or `ESC`: quit
+- `r`: refresh now
+- `t`: toggle trace
+- `c`: toggle color
+- `h`: toggle controls overlay
 
-- `--interval <sec>` (float seconds)
-- `--interval-ms <ms>`
-- `--count <n>`
-- `--once`
-- `--no-clear`
-
-TTY behavior:
-
-- alternate screen UI
-- keys: `q`/`Esc` quit, `space` pause, `r` refresh, `?` help overlay, `/` filter, `c` clear history
-
-Non-TTY behavior:
-
-- line-by-line polling output with timestamps (no ANSI)
-
-## Pager
-
-Pager support is available for long text outputs (primarily help).
-
-Enable:
-
-- `--pager`
-- `YAI_PAGER=1`
-
-Disable:
-
-- `--no-pager`
-- `YAI_NO_PAGER=1`
-- `YAI_PAGER=off`
-
-Pager is only used on TTY outputs.
-
-## Exit Codes
-
-- `0`: success
-- `10`: not implemented (`NYI`)
-- `20`: bad arguments / invalid input
-- `30`: unauthorized
-- `40`: unavailable / not ready
-- `50`: protocol/internal fallback
+See [output.md](./output.md) for the full output contract.

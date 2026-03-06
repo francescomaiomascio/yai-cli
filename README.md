@@ -1,8 +1,8 @@
-# yai-cli — Governed Operator Interface for the YAI Platform
+# yai-cli — YAI Command Surface
 
-`yai-cli` is the enterprise command-line control surface for governed YAI runtime operations.
+`yai-cli` is the canonical command surface for YAI runtime operations.
 
-It is intentionally thin, deterministic, and auditable: a contract-driven operator interface over `yai-sdk` and pinned `yai-law` artifacts.
+It is intentionally thin, deterministic, and auditable: a contract-driven command interface over `yai-sdk` and pinned `yai-law` artifacts.
 
 ## Platform role
 
@@ -15,9 +15,9 @@ It executes and exposes them.
 
 ## What this repository is
 
-- Primary operator interface for Root, Kernel, Engine, and Mind-facing runtime operations
-- Deterministic command surface aligned to pinned law registries and schemas
-- Production tooling for operators, CI gates, and integration workflows
+- Canonical command surface for workspace-first runtime operations
+- Deterministic interface aligned to pinned law registries and schemas
+- Production tooling for CLI users, CI gates, and integration workflows
 
 ## What this repository is not
 
@@ -56,10 +56,11 @@ Outputs:
 ## Quick usage
 
 ```bash
-./dist/bin/yai root status
-./dist/bin/yai kernel ws list
-./dist/bin/yai engine --ws dev status
-./dist/bin/yai mind --ws dev chat "status"
+./dist/bin/yai --help
+./dist/bin/yai ws workspace create --ws-id demo
+./dist/bin/yai ws use demo
+./dist/bin/yai gov decision status
+./dist/bin/yai inspect bundle status
 ```
 
 ## Documentation entrypoint
