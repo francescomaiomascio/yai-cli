@@ -6,6 +6,7 @@
 #include "yai_cli/help.h"
 #include "yai_cli/errors.h"
 #include "yai_cli/render.h"
+#include "yai_cli/display_map.h"
 #include "yai_cli/control_call.h"
 #include "yai_cli/lifecycle.h"
 #include "yai_cli/color.h"
@@ -45,14 +46,17 @@ static int is_helpish_command_invocation(int cmd_argc, char **cmd_argv)
 static void ensure_exec_reply_json(yai_sdk_reply_t *reply)
 {
   char buf[768];
+  yai_display_result_t mapped;
+  yai_display_from_reply(reply, &mapped);
   size_t len;
   int n;
   if (!reply || reply->exec_reply_json) return;
   n = snprintf(buf, sizeof(buf),
-               "{\"type\":\"yai.exec.reply.v1\",\"status\":\"%s\",\"code\":\"%s\",\"reason\":\"%s\",\"command_id\":\"%s\",\"target_plane\":\"%s\",\"trace_id\":\"%s\"}",
+               "{\"type\":\"yai.exec.reply.v1\",\"status\":\"%s\",\"code\":\"%s\",\"reason\":\"%s\",\"summary\":\"%s\",\"command_id\":\"%s\",\"target_plane\":\"%s\",\"trace_id\":\"%s\"}",
                reply->status[0] ? reply->status : "error",
                reply->code[0] ? reply->code : "INTERNAL_ERROR",
                reply->reason[0] ? reply->reason : "internal_error",
+               mapped.detail[0] ? mapped.detail : "Command failed.",
                reply->command_id[0] ? reply->command_id : "yai.unknown.unknown",
                reply->target_plane[0] ? reply->target_plane : "kernel",
                reply->trace_id);
