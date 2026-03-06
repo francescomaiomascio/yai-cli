@@ -17,6 +17,7 @@ LEGACY_TARGET := $(BIN_DIR)/yai-cli
 # ---- SDK (submodule) ----
 SDK_DIR := $(ROOT_DIR)/deps/yai-sdk
 SDK_INC := $(SDK_DIR)/include
+SDK_CJSON_INC := $(SDK_DIR)/third_party/cjson
 SDK_LIB := $(SDK_DIR)/dist/lib/libyai_sdk.a
 
 # ---- Law headers (protocol contracts) ----
@@ -33,6 +34,7 @@ LAW_INC_RUNTIME  := $(LAW_DIR)/contracts/protocol/runtime/include
 CFLAGS ?= -Wall -Wextra -O2 -std=c11 -MMD -MP
 CFLAGS += -I$(ROOT_DIR)/include
 CFLAGS += -I$(SDK_INC)
+CFLAGS += -I$(SDK_CJSON_INC)
 CFLAGS += -I$(LAW_INC_PROTOCOL) -I$(LAW_INC_VAULT) -I$(LAW_INC_RUNTIME)
 
 LDFLAGS ?=
