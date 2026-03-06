@@ -1,7 +1,8 @@
-// include/yai_cli/porcelain/porcelain_parse.h
+// include/yai_cli/parse.h
 #pragma once
 
 #include <stddef.h>
+#include "yai_cli/color.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,6 +13,7 @@ typedef enum yai_porcelain_kind_e {
   YAI_PORCELAIN_KIND_HELP,
   YAI_PORCELAIN_KIND_LAW,     // "yai law ..."
   YAI_PORCELAIN_KIND_COMMAND, // "yai <group> <name> ..."
+  YAI_PORCELAIN_KIND_WATCH,   // "yai watch <group> <name> ..."
   YAI_PORCELAIN_KIND_ERROR
 } yai_porcelain_kind_t;
 
@@ -20,9 +22,27 @@ typedef struct yai_porcelain_request_s {
 
   // For HELP:
   const char* help_token;
+  const char* help_token2;
+  const char* help_token3;
 
   // For COMMAND:
   const char* command_id;
+  int verbose_contract;
+  int verbose;
+  int json_output;
+  int quiet;
+  int show_trace;
+  int no_color;
+  yai_color_mode_t color_mode;
+  int pager;
+  int no_pager;
+  int interactive;
+  int watch_interval_ms;
+  int watch_count;
+  int watch_no_clear;
+  const char* ws_id;
+  const char* role;
+  int arming;
   int cmd_argc;
   char** cmd_argv;
 
@@ -32,6 +52,8 @@ typedef struct yai_porcelain_request_s {
 
   // For ERROR:
   const char* error;
+  const char* error_hint;
+  int help_exit_code;
 } yai_porcelain_request_t;
 
 int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req);

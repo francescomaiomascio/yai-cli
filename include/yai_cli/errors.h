@@ -1,4 +1,4 @@
-// include/yai_cli/porcelain/porcelain_errors.h
+// include/yai_cli/errors.h
 #pragma once
 
 #ifdef __cplusplus
@@ -8,16 +8,16 @@ extern "C" {
 typedef enum yai_porcelain_err_e {
   YAI_PORCELAIN_ERR_OK = 0,
 
-  // CLI usage / arguments
+  // CLI usage / arguments (maps to exit 20)
   YAI_PORCELAIN_ERR_USAGE = 2,
 
-  // Dependency missing (registry not readable, etc.)
+  // Dependency missing / setup failure (maps to exit 50)
   YAI_PORCELAIN_ERR_DEP_MISSING = 3,
 
-  // Runtime not ready
+  // Runtime unavailable/not ready (maps to exit 40)
   YAI_PORCELAIN_ERR_RUNTIME_NOT_READY = 4,
 
-  // Generic failure
+  // Generic internal failure (maps to exit 50)
   YAI_PORCELAIN_ERR_GENERIC = 1
 } yai_porcelain_err_t;
 
