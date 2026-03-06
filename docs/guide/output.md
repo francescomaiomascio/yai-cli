@@ -1,71 +1,53 @@
-# Output Modes
+# YAI Output Language v1
 
-YAI CLI has 4 execution output modes.
+YAI CLI execution output has 4 canonical modes.
 
-## Default
+## `default` (human/porcelain)
 
-Human one-line summary:
+Shape:
 
-- `root: ping ok`
-- `kernel: ws created (ws_id=ws_sem_02)`
-- `NOT_IMPLEMENTED: boot: artifact_audit`
-- `SERVER_UNAVAILABLE: root socket unreachable`
+1. subject line: invoked command in short human form (for example `root ping`)
+2. status line: `OK` or one canonical error class
+3. optional curated detail line(s)
+4. optional `Hint: ...` line
+5. optional `Trace: ...` line for non-OK outcomes when trace is available
 
-Default mode never prints JSON metadata (`command_id`, `trace_id`, `target_plane`).
+Rules:
 
-## `--verbose`
+- no raw JSON
+- no `command_id=...` metadata
+- no internal reason tokens as primary message
+- colors are enabled only on TTY (`NO_COLOR`, `YAI_NO_COLOR`, `TERM=dumb` disable colors)
 
-Operator/debug mode:
+## `--verbose` (human + diagnostics)
 
-1. first line is the same as default
-2. then metadata key/value lines:
-   - `status=...`
-   - `code=...`
-   - `reason=...`
-   - `command_id=...`
-   - `target_plane=...`
-   - `trace_id=...`
+Verbose keeps the same first lines as `default`, then adds:
 
-## `--json`
+- `Details:` section
+- normalized metadata (`status`, `code`, `reason`, `command_id`, `target_plane`)
+- `Trace: ...` when present
+- `Hint: ...` when applicable
 
-Machine mode:
+## `--verbose-contract` (audit)
 
-- prints only raw `exec_reply` JSON
-- no extra prefixes
-- parseable via `jq`
+Always prints:
 
-## `--verbose-contract`
+- `control_call: <json>`
+- `exec_reply: <json>`
 
-Audit/proof mode:
+No other prefixes are added in this mode.
+JSON blocks are never colorized.
 
-- exactly 2 lines:
-  - `control_call: {...}`
-  - `exec_reply: {...}`
-- no extra logs, hints, or decorations
+## `--json` (machine)
 
-## Colors
+Prints only one JSON object (`exec_reply`) with no extra text.
+Output must be parseable directly via `jq`.
 
-Color policy applies only to default/verbose human rendering:
+## Canonical Exit Codes
 
-- `ok` green
-- `nyi` yellow
-- `error` red
-- verbose keys (`status`, `code`, etc.) cyan
-
-Colors are enabled only when `stdout/stderr` is a TTY.
-
-Colors are disabled when either:
-
-- `--no-color` is set
-- `NO_COLOR` environment variable is set
-
-No colors are used in `--json` or `--verbose-contract`.
-
-## Exit Codes
-
-- `0`: success (`ok/OK`)
-- `10`: not implemented (`nyi/NOT_IMPLEMENTED`)
-- `20`: invalid input (`BAD_ARGS`/invalid target)
-- `30`: unauthorized
-- `40`: unavailable/not ready
-- `50`: protocol/internal fallback
+- `0` -> `OK`
+- `10` -> `NOT_IMPLEMENTED`
+- `20` -> `BAD_ARGS` / invalid invocation class
+- `30` -> `UNAUTHORIZED`
+- `40` -> `SERVER_UNAVAILABLE` / `RUNTIME_NOT_READY`
+- `50` -> `PROTOCOL_ERROR` / `INTERNAL_ERROR` fallback

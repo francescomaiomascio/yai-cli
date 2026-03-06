@@ -9,7 +9,7 @@ trap 'rm -rf "$TMP"' EXIT
 
 assert_no_ghost() {
   local f="$1"
-  if rg -n "unknown command group|try: yai help|invalid_arguments_or_contract_violation" "$f" >/dev/null; then
+  if rg -n "unknown command group|invalid_arguments_or_contract_violation" "$f" >/dev/null; then
     echo "ghost output detected in $f"
     cat "$f"
     exit 1
@@ -24,13 +24,14 @@ assert_no_ghost "$TMP/up.txt"
 assert_no_ghost "$TMP/root_ping.txt"
 
 "$CLI" --verbose-contract root ping >"$TMP/verbose_ping.txt" 2>&1
-if [[ "$(wc -l < "$TMP/verbose_ping.txt")" -ne 2 ]]; then
-  echo "verbose-contract must print exactly 2 lines"
+if [[ "$(wc -l < "$TMP/verbose_ping.txt")" -ne 3 ]]; then
+  echo "verbose-contract must print exactly 3 lines"
   cat "$TMP/verbose_ping.txt"
   exit 1
 fi
 rg -n "^control_call: " "$TMP/verbose_ping.txt" >/dev/null
 rg -n "^exec_reply: " "$TMP/verbose_ping.txt" >/dev/null
+rg -n "^root: ping ok$" "$TMP/verbose_ping.txt" >/dev/null
 assert_no_ghost "$TMP/verbose_ping.txt"
 
 set +e
@@ -43,6 +44,8 @@ if [[ "$RC_NYI" -ne 10 ]]; then
   exit 1
 fi
 assert_no_ghost "$TMP/nyi.txt"
+rg -n "^not implemented: " "$TMP/nyi.txt" >/dev/null
+rg -n "^hint: try: yai help <group>$" "$TMP/nyi.txt" >/dev/null
 
 "$CLI" lifecycle down >"$TMP/down.txt" 2>&1 || true
 set +e
@@ -55,6 +58,8 @@ if [[ "$RC_OFF" -ne 40 ]]; then
   exit 1
 fi
 assert_no_ghost "$TMP/offline_ping.txt"
+rg -n "^server unavailable" "$TMP/offline_ping.txt" >/dev/null
+rg -n "^hint: try: yai lifecycle up$" "$TMP/offline_ping.txt" >/dev/null
 
 set +e
 "$CLI" wat ping >"$TMP/invalid.txt" 2>&1

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <yai_cli/porcelain/porcelain.h>
+#include <yai_cli/app.h>
 
 #include <stdio.h>
 

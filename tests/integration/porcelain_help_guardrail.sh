@@ -8,11 +8,12 @@ trap 'rm -rf "$TMP"' EXIT
 
 "$CLI" help --groups >"$TMP/groups.txt" 2>&1
 [[ -s "$TMP/groups.txt" ]]
-rg -n "root|kernel|boot" "$TMP/groups.txt" >/dev/null
+rg -n "ws|run|gov|verify|inspect|bundle|doctor|watch" "$TMP/groups.txt" >/dev/null
 
-"$CLI" help root >"$TMP/root.txt" 2>&1
-rg -n "^root$" "$TMP/root.txt" >/dev/null
-rg -n "ping" "$TMP/root.txt" >/dev/null
+"$CLI" help run >"$TMP/run.txt" 2>&1
+rg -n "^run$" "$TMP/run.txt" >/dev/null
+rg -n "^Topics:$" "$TMP/run.txt" >/dev/null
+rg -n "root|engine|lifecycle" "$TMP/run.txt" >/dev/null
 
 "$CLI" lifecycle up >/dev/null 2>&1 || true
 "$CLI" root ping >"$TMP/root_ping.txt" 2>&1 || true

@@ -40,13 +40,14 @@ rg -n "^trace_id=" "$TMP/verbose.txt" >/dev/null
 jq -e . "$TMP/json.txt" >/dev/null
 
 "$CLI" --verbose-contract root ping >"$TMP/contract.txt" 2>&1
-if [[ "$(wc -l < "$TMP/contract.txt")" -ne 2 ]]; then
-  echo "verbose-contract must print exactly 2 lines"
+if [[ "$(wc -l < "$TMP/contract.txt")" -ne 3 ]]; then
+  echo "verbose-contract must print exactly 3 lines"
   cat "$TMP/contract.txt"
   exit 1
 fi
 rg -n "^control_call: " "$TMP/contract.txt" >/dev/null
 rg -n "^exec_reply: " "$TMP/contract.txt" >/dev/null
+rg -n "^root: ping ok$" "$TMP/contract.txt" >/dev/null
 
 "$CLI" kernel ws create --ws-id ws_sem_02 >"$TMP/ws_create.txt" 2>&1
 assert_one_line "$TMP/ws_create.txt"
@@ -58,11 +59,12 @@ set +e
 "$CLI" boot artifact_audit >"$TMP/nyi.txt" 2>&1
 RC_NYI=$?
 set -e
-assert_one_line "$TMP/nyi.txt"
 if [[ "$RC_NYI" -eq 10 ]]; then
-  rg -n "NOT_IMPLEMENTED: boot: artifact(_| )audit" "$TMP/nyi.txt" >/dev/null
+  rg -n "^not implemented: boot: artifact(_| )audit$" "$TMP/nyi.txt" >/dev/null
+  rg -n "^hint: try: yai help <group>$" "$TMP/nyi.txt" >/dev/null
 elif [[ "$RC_NYI" -eq 40 ]]; then
-  rg -n "^SERVER_UNAVAILABLE: root socket unreachable$" "$TMP/nyi.txt" >/dev/null
+  rg -n "^server unavailable( \\(root socket\\))?$" "$TMP/nyi.txt" >/dev/null
+  rg -n "^hint: try: yai lifecycle up$" "$TMP/nyi.txt" >/dev/null
 else
   echo "expected rc=10 (nyi) or rc=40 (runtime unavailable), got $RC_NYI"
   cat "$TMP/nyi.txt"
@@ -79,7 +81,7 @@ if [[ "$RC_OFF" -ne 40 ]]; then
   cat "$TMP/offline.txt"
   exit 1
 fi
-assert_one_line "$TMP/offline.txt"
-rg -n "^SERVER_UNAVAILABLE: root socket unreachable$" "$TMP/offline.txt" >/dev/null
+rg -n "^server unavailable( \\(root socket\\))?$" "$TMP/offline.txt" >/dev/null
+rg -n "^hint: try: yai lifecycle up$" "$TMP/offline.txt" >/dev/null
 
 echo "porcelain_v1_guardrail: ok"

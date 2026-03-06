@@ -28,16 +28,26 @@ Supported forms:
 
 ## Watch Mode
 
-Prototype live refresh mode:
+Live refresh mode:
 
 `yai watch <group> <command> [args...]`
 
-Behavior:
+Flags:
 
-- clears screen on each refresh
-- shows status header
-- executes command every 1 second
-- exits on `Ctrl+C`
+- `--interval <sec>` (float seconds)
+- `--interval-ms <ms>`
+- `--count <n>`
+- `--once`
+- `--no-clear`
+
+TTY behavior:
+
+- alternate screen UI
+- keys: `q`/`Esc` quit, `space` pause, `r` refresh, `?` help overlay, `/` filter, `c` clear history
+
+Non-TTY behavior:
+
+- line-by-line polling output with timestamps (no ANSI)
 
 ## Pager
 
@@ -51,6 +61,8 @@ Enable:
 Disable:
 
 - `--no-pager`
+- `YAI_NO_PAGER=1`
+- `YAI_PAGER=off`
 
 Pager is only used on TTY outputs.
 
