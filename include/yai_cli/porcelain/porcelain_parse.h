@@ -12,6 +12,9 @@ typedef enum yai_porcelain_kind_e {
   YAI_PORCELAIN_KIND_HELP,
   YAI_PORCELAIN_KIND_LAW,     // "yai law ..."
   YAI_PORCELAIN_KIND_COMMAND, // "yai <group> <name> ..."
+  YAI_PORCELAIN_KIND_WS_USE,  // "yai ws use <ws-id>"
+  YAI_PORCELAIN_KIND_WS_CURRENT, // "yai ws current"
+  YAI_PORCELAIN_KIND_WS_CLEAR, // "yai ws clear"
   YAI_PORCELAIN_KIND_ERROR
 } yai_porcelain_kind_t;
 
@@ -26,6 +29,7 @@ typedef struct yai_porcelain_request_s {
   int verbose_contract;
   int cmd_argc;
   char** cmd_argv;
+  const char* ws_id;
 
   // For LAW:
   int law_argc;

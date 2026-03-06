@@ -10,6 +10,7 @@
 static void req_zero(yai_porcelain_request_t* r) {
   memset(r, 0, sizeof(*r));
   r->kind = YAI_PORCELAIN_KIND_NONE;
+  r->ws_id = NULL;
 }
 
 static int set_err(yai_porcelain_request_t* r, const char* msg) {
@@ -216,6 +217,33 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
     req->kind = YAI_PORCELAIN_KIND_HELP;
     req->help_token = (cmdi + 1 < argc) ? argv[cmdi + 1] : NULL;
     return 0;
+  }
+
+  /* Workspace context UX layer:
+     - yai ws use <ws-id>
+     - yai ws current
+     - yai ws clear
+     This is a CLI/session binding concern, not a runtime command id. */
+  if (strcmp(argv[cmdi], "ws") == 0) {
+    if (cmdi + 1 >= argc || !argv[cmdi + 1]) {
+      return set_err(req, "missing workspace action (use/current/clear)");
+    }
+    if (strcmp(argv[cmdi + 1], "use") == 0) {
+      if (cmdi + 2 >= argc || !argv[cmdi + 2]) {
+        return set_err(req, "missing ws_id for `yai ws use <ws-id>`");
+      }
+      req->kind = YAI_PORCELAIN_KIND_WS_USE;
+      req->ws_id = argv[cmdi + 2];
+      return 0;
+    }
+    if (strcmp(argv[cmdi + 1], "current") == 0) {
+      req->kind = YAI_PORCELAIN_KIND_WS_CURRENT;
+      return 0;
+    }
+    if (strcmp(argv[cmdi + 1], "clear") == 0) {
+      req->kind = YAI_PORCELAIN_KIND_WS_CLEAR;
+      return 0;
+    }
   }
 
   /* From here on, we need the registry to resolve commands. */
