@@ -147,6 +147,24 @@ static int render_global_help(const yai_sdk_command_catalog_t *idx, strbuf_t *sb
   return 0;
 }
 
+static int render_plumbing_help(strbuf_t *sb)
+{
+  sb_appendf(sb, "YAI Command Surface\n\n");
+  sb_appendf(sb, "Plumbing Commands (advanced/internal)\n");
+  sb_appendf(sb, "  root\n");
+  sb_appendf(sb, "  kernel\n");
+  sb_appendf(sb, "  boot\n");
+  sb_appendf(sb, "  engine\n");
+  sb_appendf(sb, "  mind\n");
+  sb_appendf(sb, "  substrate\n");
+  sb_appendf(sb, "  orch\n");
+  sb_appendf(sb, "  lifecycle\n");
+  sb_appendf(sb, "  memory\n");
+  sb_appendf(sb, "  control\n");
+  sb_appendf(sb, "\nHint: Run 'yai help <entrypoint>' for details.\n");
+  return 0;
+}
+
 static int render_entrypoint_help(const yai_sdk_command_catalog_t *idx, const char *entrypoint, strbuf_t *sb)
 {
   int found = 0;
@@ -222,6 +240,8 @@ int yai_porcelain_help_print(const char *token1, const char *token2, const char 
     rc = render_global_help(&idx, &sb, 0);
   } else if (strcmp(token1, "--all") == 0 || strcmp(token1, "-a") == 0) {
     rc = render_global_help(&idx, &sb, 1);
+  } else if (strcmp(token1, "--plumbing") == 0) {
+    rc = render_plumbing_help(&sb);
   } else if (strcmp(token1, "--groups") == 0 || strcmp(token1, "-g") == 0 || strcmp(token1, "topics") == 0) {
     rc = render_global_help(&idx, &sb, 0);
   } else if (strncmp(token1, "yai.", 4) == 0) {

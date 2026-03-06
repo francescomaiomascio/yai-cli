@@ -19,3 +19,10 @@ This directory is the documentation entrypoint for the YAI command surface, cont
 
 CLI docs are informative for CLI operation.
 Normative contract authority remains in pinned `deps/yai-law/` artifacts.
+SDK API authority remains in pinned `deps/yai-sdk/` artifacts.
+
+## Docs architecture note
+
+For cross-repo truth boundaries and surface exposure policy, see:
+- `deps/yai-law/docs/pointers/DOCS_ARCHITECTURE.pointer.md`
+- `deps/yai-law/docs/pointers/SURFACE_POLICY.pointer.md`

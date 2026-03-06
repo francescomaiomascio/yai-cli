@@ -3,10 +3,13 @@
 ## Source of Truth
 
 The command source of truth is:
-- `deps/yai-law/registry/registry/commands.v1.json`
+- `deps/yai-law/registry/commands.v1.json`
 
 The associated schema is:
 - `deps/yai-law/registry/schema/commands.v1.schema.json`
+
+Exposure policy source of truth:
+- `deps/yai-law/docs/pointers/SURFACE_POLICY.pointer.md`
 
 ## How to read it
 

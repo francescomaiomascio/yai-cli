@@ -15,6 +15,9 @@ YAI command surface help/navigation follows:
 - `yai help <entrypoint> <topic>`
 - `yai help <entrypoint> <topic> <op>`
 
+Exposure policy for these views is defined in:
+- `deps/yai-law/docs/pointers/SURFACE_POLICY.pointer.md`
+
 ## Legacy Compatibility
 
 Legacy names can be resolved as aliases where possible.
