@@ -12,7 +12,7 @@
 static void req_zero(yai_porcelain_request_t* r) {
   memset(r, 0, sizeof(*r));
   r->kind = YAI_PORCELAIN_KIND_NONE;
-  r->ws_id = "default";
+  r->ws_id = NULL;
   r->role = "operator";
   r->arming = 1;
   r->color_mode = YAI_COLOR_AUTO;
@@ -272,6 +272,7 @@ static int find_watch_interval_ms(int argc, char **argv, int fallback_ms)
 static const char* expand_group_alias(const char* g) {
   if (!g) return NULL;
 
+  if (strcmp(g, "ws") == 0) return "workspace";
   if (strcmp(g, "gov") == 0) return "governance";
   if (strcmp(g, "sub") == 0) return "substrate";
   if (strcmp(g, "ctl") == 0) return "control";
@@ -397,7 +398,6 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
   req->no_pager = has_no_pager_flag(argc, argv);
   req->interactive = has_interactive_flag(argc, argv);
   req->ws_id = find_global_value(argc, argv, "--ws");
-  if (!req->ws_id || !req->ws_id[0]) req->ws_id = "default";
   req->role = find_global_value(argc, argv, "--role");
   if (!req->role || !req->role[0]) req->role = "operator";
   req->arming = find_global_arming(argc, argv, 1);
@@ -452,6 +452,32 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
     req->cmd_argc = argc - (cmdi + 2);
     req->cmd_argv = &argv[cmdi + 2];
     return 0;
+  }
+
+  /* Workspace context binding UX:
+     - yai ws use <ws-id>
+     - yai ws current
+     - yai ws clear */
+  if (strcmp(argv[cmdi], "ws") == 0) {
+    if (cmdi + 1 >= argc || !argv[cmdi + 1]) {
+      return set_err(req, "missing workspace action (use/current/clear)", "Run: yai help ws");
+    }
+    if (strcmp(argv[cmdi + 1], "use") == 0) {
+      if (cmdi + 2 >= argc || !argv[cmdi + 2] || !argv[cmdi + 2][0]) {
+        return set_err(req, "missing workspace id", "Run: yai ws use <ws-id>");
+      }
+      req->kind = YAI_PORCELAIN_KIND_WS_USE;
+      req->ws_id = argv[cmdi + 2];
+      return 0;
+    }
+    if (strcmp(argv[cmdi + 1], "current") == 0) {
+      req->kind = YAI_PORCELAIN_KIND_WS_CURRENT;
+      return 0;
+    }
+    if (strcmp(argv[cmdi + 1], "clear") == 0) {
+      req->kind = YAI_PORCELAIN_KIND_WS_CLEAR;
+      return 0;
+    }
   }
 
   if (strcmp(argv[cmdi], "watch") == 0) {
