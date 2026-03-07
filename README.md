@@ -1,59 +1,54 @@
-# yai-cli — YAI Command Surface
+# YAI CLI (C)
 
-`yai-cli` is the canonical command surface for YAI runtime operations.
+YAI CLI is the command surface of the YAI platform.
 
-It is intentionally thin, deterministic, and auditable: a contract-driven command interface over `yai-sdk` and pinned `yai-law` artifacts.
+It exposes governed command behavior for invoking, inspecting, and operating YAI under explicit law and aligned interfaces.
 
-## Platform role
+This repository contains the canonical CLI implementation of the platform.
 
-Dependency and authority chain:
+## Platform position
 
-`yai-law` -> `yai-sdk` -> `yai-cli` -> `yai` -> `yai-ops`
+`yai-law` → `yai-sdk` → `yai-cli` → `yai` → `yai-ops`
 
-The CLI does not invent contract semantics.
-It executes and exposes them.
+Law defines the rules. The SDK carries the interface. The CLI exposes the surface.
 
-## What this repository is
+## Design posture
 
-- Canonical command surface for workspace-first runtime operations
-- Deterministic interface aligned to pinned law registries and schemas
-- Production tooling for CLI users, CI gates, and integration workflows
+- **Commands follow law**
+- **Behavior is explicit**
+- **Side effects are controlled**
+- **Outputs are reviewable**
+- **Compatibility is tracked**
 
-## What this repository is not
+## Scope
 
-- Not a policy authority repository
-- Not a speculative workflow shell
-- Not a place to negotiate contract semantics outside `yai-law`
+This repository owns the canonical command implementation for YAI.
 
-## Contract discipline (non-negotiable)
+It does not own normative contract semantics (`yai-law`), platform implementation (`yai`), or shared governance tooling (`yai-infra`).
 
-The CLI is governed by pinned law and SDK surfaces:
+## Contract discipline
 
-- Canonical command registry: `deps/yai-law/registry/commands.v1.json`
-- Canonical command schema: `deps/yai-law/registry/schema/commands.v1.schema.json`
-- Canonical protocol surface: `deps/yai-law/contracts/protocol/include/*`
-- Canonical SDK public include: `deps/yai-sdk/include/yai_sdk/public.h`
+Pinned dependencies include:
 
-If behavior drifts from pinned law, the implementation is defective.
+- `deps/yai-law/registry/commands.v1.json`
+- `deps/yai-law/registry/schema/commands.v1.schema.json`
+- `deps/yai-law/contracts/protocol/include/*`
+- `deps/yai-sdk/include/yai_sdk/public.h`
 
-## Determinism and governance posture
+Divergence from pinned law or aligned SDK interfaces is an implementation defect.
 
-- No hidden side effects
-- Explicit return-code semantics
-- Reproducible releases and compatibility tracking
-- Law pinning is explicit and reviewable
-
-## Build and outputs
+## Build
 
 ```bash
 make
 ```
 
-Outputs:
-- `dist/bin/yai` (canonical entrypoint)
-- `dist/bin/yai-cli` (compat alias)
+## Outputs
 
-## Quick usage
+- `dist/bin/yai`
+- `dist/bin/yai-cli`
+
+## Usage
 
 ```bash
 ./dist/bin/yai --help
@@ -63,17 +58,9 @@ Outputs:
 ./dist/bin/yai inspect bundle status
 ```
 
-## Documentation entrypoint
+## Documentation
 
 - `docs/README.md`
-
-## Governance references
-
-- `VERSIONING.md`
-- `COMPATIBILITY.md`
-- `CHANGELOG.md`
-- `SECURITY.md`
-- `CONTRIBUTING.md`
 
 ## License
 
