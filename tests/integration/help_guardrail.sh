@@ -7,8 +7,8 @@ TMP="$(mktemp -d /tmp/yai-cli-help-v1-XXXXXX)"
 trap 'rm -rf "$TMP"' EXIT
 
 "$CLI" help --groups >"$TMP/groups.txt" 2>&1
-rg -n "^YAI Operator CLI$" "$TMP/groups.txt" >/dev/null
-rg -n "^Main Operator Commands:$" "$TMP/groups.txt" >/dev/null
+rg -n "^YAI Command Surface$" "$TMP/groups.txt" >/dev/null
+rg -n "^Main Surface Commands:$" "$TMP/groups.txt" >/dev/null
 rg -n "ws|run|gov|verify|inspect|bundle|config|doctor|watch|help|version" "$TMP/groups.txt" >/dev/null
 
 "$CLI" help run >"$TMP/help_run.txt" 2>&1

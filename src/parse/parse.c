@@ -290,6 +290,42 @@ find_by_group_name(const yai_sdk_command_catalog_t* cat, const char* group, cons
   return yai_sdk_command_catalog_find_command(cat, group, name);
 }
 
+/* Local operator capability routes are deterministic and independent from runtime command handlers. */
+static const char* map_operator_capability_command_id(const char* entrypoint, const char* topic)
+{
+  if (!entrypoint || !topic || !topic[0]) return NULL;
+
+  if (strcmp(entrypoint, "doctor") == 0) {
+    if (strcmp(topic, "env") == 0) return "yai.operator.doctor.env";
+    if (strcmp(topic, "runtime") == 0) return "yai.operator.doctor.runtime";
+    if (strcmp(topic, "workspace") == 0) return "yai.operator.doctor.workspace";
+    if (strcmp(topic, "pins") == 0) return "yai.operator.doctor.pins";
+    if (strcmp(topic, "config") == 0) return "yai.operator.doctor.config";
+    if (strcmp(topic, "all") == 0) return "yai.operator.doctor.all";
+    return NULL;
+  }
+
+  if (strcmp(entrypoint, "inspect") == 0) {
+    if (strcmp(topic, "workspace") == 0) return "yai.operator.inspect.workspace";
+    if (strcmp(topic, "runtime") == 0) return "yai.operator.inspect.runtime";
+    if (strcmp(topic, "catalog") == 0) return "yai.operator.inspect.catalog";
+    if (strcmp(topic, "context") == 0) return "yai.operator.inspect.context";
+    return NULL;
+  }
+
+  if (strcmp(entrypoint, "verify") == 0) {
+    if (strcmp(topic, "law") == 0) return "yai.operator.verify.law";
+    if (strcmp(topic, "registry") == 0) return "yai.operator.verify.registry";
+    if (strcmp(topic, "runtime") == 0) return "yai.operator.verify.runtime";
+    if (strcmp(topic, "workspace") == 0) return "yai.operator.verify.workspace";
+    if (strcmp(topic, "reply") == 0) return "yai.operator.verify.reply";
+    if (strcmp(topic, "alignment") == 0) return "yai.operator.verify.alignment";
+    return NULL;
+  }
+
+  return NULL;
+}
+
 /* Resolve "<group>-<name>" (alias) into a command. */
 static const yai_sdk_command_ref_t*
 find_by_alias(const yai_sdk_command_catalog_t* cat, const char* token, const char** out_group, const char** out_name) {
@@ -478,6 +514,30 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
       req->kind = YAI_PORCELAIN_KIND_WS_CLEAR;
       return 0;
     }
+  }
+
+  if (strcmp(argv[cmdi], "doctor") == 0 ||
+      strcmp(argv[cmdi], "inspect") == 0 ||
+      strcmp(argv[cmdi], "verify") == 0) {
+    const char *entrypoint = argv[cmdi];
+    const char *topic = (cmdi + 1 < argc) ? argv[cmdi + 1] : NULL;
+    const char *mapped = NULL;
+    if (!topic || !topic[0]) {
+      static char hint[64];
+      snprintf(hint, sizeof(hint), "Run: yai help %s", entrypoint);
+      return set_err(req, "missing topic", hint);
+    }
+    mapped = map_operator_capability_command_id(entrypoint, topic);
+    if (!mapped) {
+      static char hint[64];
+      snprintf(hint, sizeof(hint), "Run: yai help %s", entrypoint);
+      return set_err(req, "unknown topic", hint);
+    }
+    req->kind = YAI_PORCELAIN_KIND_COMMAND;
+    req->command_id = mapped;
+    req->cmd_argc = argc - (cmdi + 2);
+    req->cmd_argv = &argv[cmdi + 2];
+    return 0;
   }
 
   if (strcmp(argv[cmdi], "watch") == 0) {

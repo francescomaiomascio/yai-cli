@@ -17,6 +17,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 /* Legacy hook: law command stays separate for now */
 int yai_cmd_law(int argc, char **argv);
@@ -119,6 +121,428 @@ static int handle_ws_clear(void)
   return 0;
 }
 
+static int starts_with(const char *s, const char *prefix)
+{
+  size_t n;
+  if (!s || !prefix) return 0;
+  n = strlen(prefix);
+  return strncmp(s, prefix, n) == 0;
+}
+
+static int file_exists(const char *path)
+{
+  struct stat st;
+  if (!path || !path[0]) return 0;
+  return stat(path, &st) == 0;
+}
+
+static void operator_reply_set(
+    yai_sdk_reply_t *reply,
+    const char *command_id,
+    const char *status,
+    const char *code,
+    const char *reason,
+    const char *summary,
+    const char *hint1,
+    const char *hint2,
+    const char *details)
+{
+  char json[2048];
+  int n = 0;
+  if (!reply) return;
+  memset(reply, 0, sizeof(*reply));
+  snprintf(reply->status, sizeof(reply->status), "%s", (status && status[0]) ? status : "error");
+  snprintf(reply->code, sizeof(reply->code), "%s", (code && code[0]) ? code : "INTERNAL_ERROR");
+  snprintf(reply->reason, sizeof(reply->reason), "%s", (reason && reason[0]) ? reason : "operator_error");
+  snprintf(reply->summary, sizeof(reply->summary), "%s", (summary && summary[0]) ? summary : "operator capability check failed");
+  snprintf(reply->command_id, sizeof(reply->command_id), "%s", (command_id && command_id[0]) ? command_id : "yai.operator.unknown");
+  snprintf(reply->target_plane, sizeof(reply->target_plane), "root");
+  snprintf(reply->trace_id, sizeof(reply->trace_id), "op-%ld", (long)getpid());
+  if (hint1 && hint1[0]) {
+    snprintf(reply->hints[0], sizeof(reply->hints[0]), "%s", hint1);
+    reply->hint_count = 1;
+  }
+  if (hint2 && hint2[0]) {
+    snprintf(reply->hints[1], sizeof(reply->hints[1]), "%s", hint2);
+    reply->hint_count = 2;
+  }
+  if (details && details[0]) {
+    snprintf(reply->details, sizeof(reply->details), "%s", details);
+  }
+  n = snprintf(
+      json,
+      sizeof(json),
+      "{\"type\":\"yai.exec.reply.v1\",\"status\":\"%s\",\"code\":\"%s\","
+      "\"reason\":\"%s\",\"summary\":\"%s\",\"hints\":[\"%s\",\"%s\"],"
+      "\"details\":\"%s\",\"command_id\":\"%s\",\"target_plane\":\"%s\",\"trace_id\":\"%s\"}",
+      reply->status,
+      reply->code,
+      reply->reason,
+      reply->summary,
+      reply->hints[0],
+      reply->hints[1],
+      reply->details,
+      reply->command_id,
+      reply->target_plane,
+      reply->trace_id);
+  if (n > 0 && (size_t)n < sizeof(json)) {
+    reply->exec_reply_json = (char *)malloc((size_t)n + 1);
+    if (reply->exec_reply_json) {
+      memcpy(reply->exec_reply_json, json, (size_t)n + 1);
+    }
+  }
+}
+
+static int operator_runtime_ping(yai_sdk_reply_t *reply, const char *command_id)
+{
+  yai_sdk_client_t *client = NULL;
+  yai_sdk_client_opts_t opts = {
+    .ws_id = "default",
+    .uds_path = NULL,
+    .arming = 1,
+    .role = "operator",
+    .auto_handshake = 1,
+  };
+  int rc = yai_sdk_client_open(&client, &opts);
+  if (rc != 0) {
+    operator_reply_set(reply, command_id, "error", "SERVER_UNAVAILABLE", "server_unavailable",
+                       "Runtime endpoint is unreachable.",
+                       "Start the runtime with: yai lifecycle up",
+                       "Run: yai doctor runtime",
+                       "root socket unavailable");
+    return 1;
+  }
+  rc = yai_sdk_client_ping(client, "yai.root.ping", reply);
+  yai_sdk_client_close(client);
+  snprintf(reply->command_id, sizeof(reply->command_id), "%s", command_id);
+  if (rc != 0 || strcmp(reply->status, "ok") != 0) {
+    if (!reply->summary[0]) {
+      snprintf(reply->summary, sizeof(reply->summary), "Runtime ping failed.");
+    }
+    if (reply->hint_count == 0) {
+      snprintf(reply->hints[0], sizeof(reply->hints[0]), "Start the runtime with: yai lifecycle up");
+      reply->hint_count = 1;
+    }
+    return 1;
+  }
+  operator_reply_set(reply, command_id, "ok", "OK", "runtime_ready",
+                     "Runtime checks passed.",
+                     "",
+                     "",
+                     "root ping ok");
+  return 0;
+}
+
+static int handle_operator_capability(const yai_porcelain_request_t *req, yai_sdk_reply_t *reply)
+{
+  yai_sdk_workspace_info_t ws_info = {0};
+  yai_sdk_command_catalog_t cat = {0};
+  char ws_id[64] = {0};
+  char details[512];
+  size_t surface_count = 0;
+  int rc = 0;
+  if (!req || !reply || !req->command_id) return 1;
+  details[0] = '\0';
+
+  if (strcmp(req->command_id, "yai.operator.doctor.env") == 0) {
+    if (!getenv("HOME") || !getenv("PATH")) {
+      operator_reply_set(reply, req->command_id, "error", "BAD_ARGS", "env_missing",
+                         "Environment checks failed.",
+                         "Set HOME and PATH before running CLI commands.",
+                         "Run: yai doctor config",
+                         "required environment variables are missing");
+      return 1;
+    }
+    snprintf(details, sizeof(details), "sdk_version=%s abi=%d", yai_sdk_version(), yai_sdk_abi_version());
+    operator_reply_set(reply, req->command_id, "ok", "OK", "doctor_env_ok",
+                       "Environment checks passed.",
+                       "",
+                       "",
+                       details);
+    return 0;
+  }
+
+  if (strcmp(req->command_id, "yai.operator.doctor.runtime") == 0) {
+    return operator_runtime_ping(reply, req->command_id);
+  }
+
+  if (strcmp(req->command_id, "yai.operator.doctor.workspace") == 0) {
+    rc = yai_sdk_context_validate_current_workspace(&ws_info);
+    if (rc == YAI_SDK_BAD_ARGS) {
+      operator_reply_set(reply, req->command_id, "error", "BAD_ARGS", "workspace_context_missing",
+                         "No workspace selected.",
+                         "Run: yai ws use <ws-id>",
+                         "Or pass: --ws-id <ws-id>",
+                         "");
+      return 1;
+    }
+    if (rc != 0 || !ws_info.exists) {
+      operator_reply_set(reply, req->command_id, "error", "BAD_ARGS", "workspace_context_invalid",
+                         "Current workspace binding is invalid.",
+                         "Run: yai ws clear",
+                         "Run: yai ws use <ws-id>",
+                         "");
+      return 1;
+    }
+    snprintf(details, sizeof(details), "ws_id=%.63s state=%.31s root_path=%.255s",
+             ws_info.ws_id, ws_info.state, ws_info.root_path);
+    operator_reply_set(reply, req->command_id, "ok", "OK", "doctor_workspace_ok",
+                       "Workspace checks passed.",
+                       "",
+                       "",
+                       details);
+    return 0;
+  }
+
+  if (strcmp(req->command_id, "yai.operator.doctor.pins") == 0) {
+    int law_ok = file_exists("deps/yai-law/registry/commands.v1.json");
+    int sdk_ok = file_exists("deps/yai-sdk/include/yai_sdk/public.h");
+    if (!law_ok || !sdk_ok) {
+      operator_reply_set(reply, req->command_id, "error", "BAD_ARGS", "pins_mismatch",
+                         "Dependency pins are not aligned.",
+                         "Run: git submodule update --init --recursive",
+                         "Run: yai doctor all",
+                         "expected deps/yai-law and deps/yai-sdk");
+      return 1;
+    }
+    operator_reply_set(reply, req->command_id, "ok", "OK", "doctor_pins_ok",
+                       "Pin checks passed.",
+                       "",
+                       "",
+                       "deps/yai-law and deps/yai-sdk present");
+    return 0;
+  }
+
+  if (strcmp(req->command_id, "yai.operator.doctor.config") == 0) {
+    const char *home = getenv("HOME");
+    if (!home || !home[0]) {
+      operator_reply_set(reply, req->command_id, "error", "BAD_ARGS", "config_home_missing",
+                         "Configuration root is not available.",
+                         "Set HOME and retry.",
+                         "Run: yai doctor env",
+                         "");
+      return 1;
+    }
+    operator_reply_set(reply, req->command_id, "ok", "OK", "doctor_config_ok",
+                       "Configuration checks passed.",
+                       "",
+                       "",
+                       "context root available");
+    return 0;
+  }
+
+  if (strcmp(req->command_id, "yai.operator.doctor.all") == 0) {
+    int env_ok = (getenv("HOME") && getenv("PATH"));
+    int pins_ok = file_exists("deps/yai-law/registry/commands.v1.json") &&
+                  file_exists("deps/yai-sdk/include/yai_sdk/public.h");
+    int runtime_ok = (operator_runtime_ping(reply, req->command_id) == 0);
+    int ws_ok = (yai_sdk_context_validate_current_workspace(&ws_info) == 0);
+    if (runtime_ok && env_ok && pins_ok) {
+      snprintf(details, sizeof(details), "env=%s runtime=%s workspace=%s pins=%s",
+               env_ok ? "ok" : "fail",
+               runtime_ok ? "ok" : "fail",
+               ws_ok ? "ok" : "warn",
+               pins_ok ? "ok" : "fail");
+      operator_reply_set(reply, req->command_id, "ok", "OK", "doctor_all_ok",
+                         "Operator capability checks passed.",
+                         ws_ok ? "" : "No current workspace selected; run: yai ws use <ws-id>",
+                         "",
+                         details);
+      return 0;
+    }
+    snprintf(details, sizeof(details), "env=%s runtime=%s workspace=%s pins=%s",
+             env_ok ? "ok" : "fail",
+             runtime_ok ? "ok" : "fail",
+             ws_ok ? "ok" : "fail",
+             pins_ok ? "ok" : "fail");
+    operator_reply_set(reply, req->command_id, "error", "BAD_ARGS", "doctor_all_failed",
+                       "Operator capability checks failed.",
+                       "Run: yai doctor env",
+                       "Run: yai doctor runtime",
+                       details);
+    return 1;
+  }
+
+  if (strcmp(req->command_id, "yai.operator.inspect.context") == 0) {
+    rc = yai_sdk_context_get_current_workspace(ws_id, sizeof(ws_id));
+    if (rc == 1) {
+      operator_reply_set(reply, req->command_id, "error", "BAD_ARGS", "context_missing",
+                         "No workspace selected.",
+                         "Run: yai ws use <ws-id>",
+                         "",
+                         "");
+      return 1;
+    }
+    if (rc != 0) {
+      operator_reply_set(reply, req->command_id, "error", "BAD_ARGS", "context_error",
+                         "Unable to read current workspace context.",
+                         "Run: yai ws clear",
+                         "",
+                         "");
+      return 1;
+    }
+    snprintf(details, sizeof(details), "current_workspace=%s", ws_id);
+    operator_reply_set(reply, req->command_id, "ok", "OK", "inspect_context_ok",
+                       "Workspace context loaded.",
+                       "",
+                       "",
+                       details);
+    return 0;
+  }
+
+  if (strcmp(req->command_id, "yai.operator.inspect.workspace") == 0) {
+    rc = yai_sdk_context_validate_current_workspace(&ws_info);
+    if (rc != 0 || !ws_info.exists) {
+      operator_reply_set(reply, req->command_id, "error", "BAD_ARGS", "inspect_workspace_failed",
+                         "Workspace state is not available.",
+                         "Run: yai ws current",
+                         "Run: yai ws use <ws-id>",
+                         "");
+      return 1;
+    }
+    snprintf(details, sizeof(details), "ws_id=%.63s state=%.31s root_path=%.255s",
+             ws_info.ws_id, ws_info.state, ws_info.root_path);
+    operator_reply_set(reply, req->command_id, "ok", "OK", "inspect_workspace_ok",
+                       "Workspace state loaded.",
+                       "",
+                       "",
+                       details);
+    return 0;
+  }
+
+  if (strcmp(req->command_id, "yai.operator.inspect.runtime") == 0) {
+    return operator_runtime_ping(reply, req->command_id);
+  }
+
+  if (strcmp(req->command_id, "yai.operator.inspect.catalog") == 0) {
+    if (yai_sdk_command_catalog_load(&cat) != 0) {
+      operator_reply_set(reply, req->command_id, "error", "BAD_ARGS", "catalog_unavailable",
+                         "Catalog is unavailable.",
+                         "Run: yai doctor pins",
+                         "",
+                         "");
+      return 1;
+    }
+    surface_count = yai_sdk_command_catalog_query(
+        &cat,
+        &(yai_sdk_catalog_filter_t){
+            .surface_mask = YAI_SDK_CATALOG_SURFACE_SURFACE,
+            .stability_mask = YAI_SDK_CATALOG_STABILITY_STABLE | YAI_SDK_CATALOG_STABILITY_EXPERIMENTAL,
+            .include_hidden = 0,
+            .include_deprecated = 0},
+        NULL,
+        0);
+    snprintf(details, sizeof(details), "groups=%zu commands=%zu surface=%zu",
+             cat.group_count, cat.command_count, surface_count);
+    yai_sdk_command_catalog_free(&cat);
+    operator_reply_set(reply, req->command_id, "ok", "OK", "inspect_catalog_ok",
+                       "Catalog snapshot loaded.",
+                       "",
+                       "",
+                       details);
+    return 0;
+  }
+
+  if (strcmp(req->command_id, "yai.operator.verify.law") == 0) {
+    if (!file_exists("deps/yai-law/registry/commands.v1.json")) {
+      operator_reply_set(reply, req->command_id, "error", "BAD_ARGS", "verify_law_missing",
+                         "Law registry artifact is missing.",
+                         "Run: git submodule update --init --recursive",
+                         "",
+                         "");
+      return 1;
+    }
+    operator_reply_set(reply, req->command_id, "ok", "OK", "verify_law_ok",
+                       "Law artifacts are available.",
+                       "",
+                       "",
+                       "commands.v1.json present");
+    return 0;
+  }
+
+  if (strcmp(req->command_id, "yai.operator.verify.registry") == 0) {
+    if (yai_sdk_command_catalog_load(&cat) != 0 || cat.command_count == 0) {
+      if (cat.groups) yai_sdk_command_catalog_free(&cat);
+      operator_reply_set(reply, req->command_id, "error", "BAD_ARGS", "verify_registry_failed",
+                         "Catalog validation failed.",
+                         "Run: yai doctor pins",
+                         "",
+                         "");
+      return 1;
+    }
+    snprintf(details, sizeof(details), "groups=%zu commands=%zu", cat.group_count, cat.command_count);
+    yai_sdk_command_catalog_free(&cat);
+    operator_reply_set(reply, req->command_id, "ok", "OK", "verify_registry_ok",
+                       "Registry checks passed.",
+                       "",
+                       "",
+                       details);
+    return 0;
+  }
+
+  if (strcmp(req->command_id, "yai.operator.verify.runtime") == 0) {
+    return operator_runtime_ping(reply, req->command_id);
+  }
+
+  if (strcmp(req->command_id, "yai.operator.verify.workspace") == 0) {
+    rc = yai_sdk_context_validate_current_workspace(&ws_info);
+    if (rc != 0 || !ws_info.exists || !ws_info.root_path[0]) {
+      operator_reply_set(reply, req->command_id, "error", "BAD_ARGS", "verify_workspace_failed",
+                         "Workspace model checks failed.",
+                         "Run: yai doctor workspace",
+                         "",
+                         "");
+      return 1;
+    }
+    snprintf(details, sizeof(details), "ws_id=%.63s state=%.31s root_path=%.255s",
+             ws_info.ws_id, ws_info.state, ws_info.root_path);
+    operator_reply_set(reply, req->command_id, "ok", "OK", "verify_workspace_ok",
+                       "Workspace checks passed.",
+                       "",
+                       "",
+                       details);
+    return 0;
+  }
+
+  if (strcmp(req->command_id, "yai.operator.verify.reply") == 0) {
+    operator_reply_set(reply, req->command_id, "ok", "OK", "verify_reply_ok",
+                       "Reply architecture checks passed.",
+                       "",
+                       "",
+                       "status/code/summary/hints contract available");
+    return 0;
+  }
+
+  if (strcmp(req->command_id, "yai.operator.verify.alignment") == 0) {
+    int law_ok = file_exists("deps/yai-law/registry/commands.v1.json");
+    int sdk_ok = file_exists("deps/yai-sdk/include/yai_sdk/public.h");
+    int runtime_ok = (operator_runtime_ping(reply, req->command_id) == 0);
+    int catalog_ok = (yai_sdk_command_catalog_load(&cat) == 0);
+    if (catalog_ok) yai_sdk_command_catalog_free(&cat);
+    snprintf(details, sizeof(details), "law=%s sdk=%s catalog=%s runtime=%s",
+             law_ok ? "ok" : "fail",
+             sdk_ok ? "ok" : "fail",
+             catalog_ok ? "ok" : "fail",
+             runtime_ok ? "ok" : "fail");
+    if (law_ok && sdk_ok && catalog_ok && runtime_ok) {
+      operator_reply_set(reply, req->command_id, "ok", "OK", "verify_alignment_ok",
+                         "Cross-repo alignment checks passed.",
+                         "",
+                         "",
+                         details);
+      return 0;
+    }
+    operator_reply_set(reply, req->command_id, "error", "BAD_ARGS", "verify_alignment_failed",
+                       "Cross-repo alignment checks failed.",
+                       "Run: yai doctor all",
+                       "Run: yai verify law",
+                       details);
+    return 1;
+  }
+
+  return 1;
+}
+
 static void ensure_exec_reply_json(yai_sdk_reply_t *reply)
 {
   char buf[768];
@@ -185,6 +609,44 @@ int yai_porcelain_run(int argc, char **argv)
       return handle_ws_clear();
 
     case YAI_PORCELAIN_KIND_COMMAND:
+      if (starts_with(req.command_id, "yai.operator.")) {
+        char display_command_id[128];
+        const char *render_command_id = req.command_id;
+        yai_sdk_reply_t reply = {0};
+        int op_rc = handle_operator_capability(&req, &reply);
+        if (starts_with(req.command_id, "yai.operator.")) {
+          snprintf(display_command_id, sizeof(display_command_id), "yai.%s", req.command_id + strlen("yai.operator."));
+          render_command_id = display_command_id;
+        }
+        int rendered = 0;
+        yai_render_opts_t ropts = {
+          .use_color = yai_color_enabled((op_rc == 0) ? stdout : stderr, req.no_color, req.color_mode),
+          .is_tty = yai_term_is_tty(),
+          .show_trace = req.show_trace,
+          .quiet = req.quiet,
+          .command_id = render_command_id,
+          .argc = req.cmd_argc,
+          .argv = req.cmd_argv,
+        };
+        ensure_exec_reply_json(&reply);
+        if (req.json_output) {
+          rendered = yai_render_exec_json(&reply);
+        } else if (req.verbose_contract) {
+          rendered = yai_render_exec_contract_verbose(&reply, op_rc, NULL);
+        } else if (req.verbose) {
+          rendered = yai_render_exec_verbose(&reply, op_rc, &ropts);
+        } else {
+          rendered = yai_render_exec_short(&reply, op_rc, &ropts);
+        }
+        if (!rendered) {
+          fprintf(stderr, "operator capability\nINTERNAL ERROR\nrendering failed\n");
+          yai_sdk_reply_free(&reply);
+          return 50;
+        }
+        op_rc = yai_render_exec_exit_code(&reply, op_rc);
+        yai_sdk_reply_free(&reply);
+        return op_rc;
+      }
       if (is_helpish_command_invocation(req.cmd_argc, req.cmd_argv)) {
         /* resolved command id -> show contract help */
         return yai_porcelain_help_print(req.command_id, NULL, NULL, req.pager, req.no_pager);

@@ -170,6 +170,31 @@ static int render_entrypoint_help(const yai_sdk_command_catalog_t *idx, const ch
   int found = 0;
   sb_appendf(sb, "%s\n\n", entrypoint);
   sb_appendf(sb, "Topics:\n");
+  if (strcmp(entrypoint, "doctor") == 0) {
+    sb_appendf(sb, "  env                environment readiness checks\n");
+    sb_appendf(sb, "  runtime            runtime reachability checks\n");
+    sb_appendf(sb, "  workspace          workspace binding checks\n");
+    sb_appendf(sb, "  pins               dependency pin checks\n");
+    sb_appendf(sb, "  config             configuration checks\n");
+    sb_appendf(sb, "  all                aggregated diagnostics\n");
+    return 0;
+  }
+  if (strcmp(entrypoint, "inspect") == 0) {
+    sb_appendf(sb, "  workspace          workspace state snapshot\n");
+    sb_appendf(sb, "  runtime            runtime state snapshot\n");
+    sb_appendf(sb, "  catalog            command catalog snapshot\n");
+    sb_appendf(sb, "  context            current context snapshot\n");
+    return 0;
+  }
+  if (strcmp(entrypoint, "verify") == 0) {
+    sb_appendf(sb, "  law                law artifacts availability\n");
+    sb_appendf(sb, "  registry           registry/catalog coherence\n");
+    sb_appendf(sb, "  runtime            runtime contract reachability\n");
+    sb_appendf(sb, "  workspace          workspace model checks\n");
+    sb_appendf(sb, "  reply              reply architecture checks\n");
+    sb_appendf(sb, "  alignment          cross-repo alignment checks\n");
+    return 0;
+  }
   for (size_t i = 0; i < idx->group_count; i++) {
     const yai_sdk_command_group_t *g = &idx->groups[i];
     const char *ep = map_entrypoint(g->group);
@@ -183,6 +208,14 @@ static int render_entrypoint_help(const yai_sdk_command_catalog_t *idx, const ch
 
 static int render_topic_help(const yai_sdk_command_catalog_t *idx, const char *entrypoint, const char *topic, strbuf_t *sb)
 {
+  if (strcmp(entrypoint, "doctor") == 0 || strcmp(entrypoint, "inspect") == 0 || strcmp(entrypoint, "verify") == 0) {
+    sb_appendf(sb, "%s %s\n\n", entrypoint, topic);
+    sb_appendf(sb, "Usage:\n");
+    sb_appendf(sb, "  yai %s %s [options]\n\n", entrypoint, topic);
+    sb_appendf(sb, "Notes:\n");
+    sb_appendf(sb, "  Use --json for machine output.\n");
+    return 0;
+  }
   const yai_sdk_command_group_t *g = yai_sdk_command_catalog_find_group(idx, topic);
   if (!g || strcmp(map_entrypoint(g->group), entrypoint) != 0) {
     return help_error("unknown topic", "Run: yai help <entrypoint>");

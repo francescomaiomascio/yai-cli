@@ -34,3 +34,17 @@ Workspace resolution for workspace-scoped commands is deterministic:
 
 No "invented" commands outside specs.
 If CLI/specs drift appears: open an issue and align before release.
+
+## Operator Capability Split
+
+The operator capability pack is split into:
+
+- `doctor` for diagnostics and readiness checks
+- `inspect` for read-only visibility
+- `verify` for validation and alignment checks
+
+Supported capability topics:
+
+- `doctor env|runtime|workspace|pins|config|all`
+- `inspect workspace|runtime|catalog|context`
+- `verify law|registry|runtime|workspace|reply|alignment`

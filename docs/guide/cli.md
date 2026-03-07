@@ -59,3 +59,19 @@ Interactive controls:
 - `h`: toggle controls overlay
 
 See [output.md](./output.md) for the full output contract.
+
+## Operator Capabilities
+
+Operator capability surfaces are intentionally separated:
+
+- `doctor`: readiness and diagnostics checks
+- `inspect`: read-only state introspection
+- `verify`: contract and alignment validation
+
+Capability topics:
+
+- `doctor env|runtime|workspace|pins|config|all`
+- `inspect workspace|runtime|catalog|context`
+- `verify law|registry|runtime|workspace|reply|alignment`
+
+All capability commands support the standard output modes, including `--json`.

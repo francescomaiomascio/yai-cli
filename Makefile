@@ -104,6 +104,8 @@ test: sdk $(TARGET) $(UNIT_TEST_BIN) $(VECTORS_TEST_BIN)
 	@tests/integration/help_guardrail.sh
 	@echo "[TEST] tests/integration/porcelain_help_guardrail.sh"
 	@tests/integration/porcelain_help_guardrail.sh
+	@echo "[TEST] tests/integration/operator_capability_pack_guardrail.sh"
+	@tests/integration/operator_capability_pack_guardrail.sh
 	@echo "--- [YAI-CLI] Tests Complete ---"
 $(UNIT_TEST_BIN): tests/unit/parse_test.c | dirs sdk
 	@mkdir -p $(TEST_BIN_DIR)

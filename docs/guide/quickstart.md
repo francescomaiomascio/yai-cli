@@ -57,3 +57,29 @@ yai gov decision status --ws-id other_demo
 yai watch run kernel ping --interval-ms 1000
 NO_COLOR=1 yai watch run kernel ping --count 3 --interval-ms 200
 ```
+
+## 8. Run Operator Capability Pack
+
+```bash
+yai doctor env
+yai doctor runtime
+yai doctor workspace
+yai doctor all
+
+yai inspect workspace
+yai inspect runtime
+yai inspect catalog
+
+yai verify law
+yai verify registry
+yai verify workspace
+yai verify alignment
+```
+
+Machine mode:
+
+```bash
+yai doctor all --json
+yai inspect workspace --json
+yai verify alignment --json
+```
