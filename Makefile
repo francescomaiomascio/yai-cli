@@ -44,6 +44,7 @@ SRCS := \
   src/app/lifecycle.c \
   src/render/render.c \
   src/watch/watch.c \
+  src/watch/watch_target.c \
   src/watch/watch_model.c \
   src/watch/watch_ui.c \
   src/term/keys.c \
@@ -55,6 +56,7 @@ OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
 DEPS := $(OBJS:.o=.d)
 TEST_BIN_DIR := $(BUILD_DIR)/tests
 UNIT_TEST_BIN := $(TEST_BIN_DIR)/unit_parse_test
+WATCH_UNIT_TEST_BIN := $(TEST_BIN_DIR)/unit_watch_test
 VECTORS_TEST_BIN := $(TEST_BIN_DIR)/vectors_rpc_test
 .PHONY: all clean dirs docs docs-clean test sdk sdk-clean
 all: dirs docs sdk $(TARGET)
@@ -93,9 +95,11 @@ docs-clean:
 # -----------------------------------------
 # Tests
 # -----------------------------------------
-test: sdk $(TARGET) $(UNIT_TEST_BIN) $(VECTORS_TEST_BIN)
+test: sdk $(TARGET) $(UNIT_TEST_BIN) $(WATCH_UNIT_TEST_BIN) $(VECTORS_TEST_BIN)
 	@echo "[TEST] $(UNIT_TEST_BIN)"
 	@$(UNIT_TEST_BIN)
+	@echo "[TEST] $(WATCH_UNIT_TEST_BIN)"
+	@$(WATCH_UNIT_TEST_BIN)
 	@echo "[TEST] $(VECTORS_TEST_BIN)"
 	@$(VECTORS_TEST_BIN)
 	@echo "[TEST] tests/integration/output_contract_v1_guardrail.sh"
@@ -106,10 +110,15 @@ test: sdk $(TARGET) $(UNIT_TEST_BIN) $(VECTORS_TEST_BIN)
 	@tests/integration/porcelain_help_guardrail.sh
 	@echo "[TEST] tests/integration/operator_capability_pack_guardrail.sh"
 	@tests/integration/operator_capability_pack_guardrail.sh
+	@echo "[TEST] tests/integration/watch_hardening_guardrail.sh"
+	@tests/integration/watch_hardening_guardrail.sh
 	@echo "--- [YAI-CLI] Tests Complete ---"
 $(UNIT_TEST_BIN): tests/unit/parse_test.c | dirs sdk
 	@mkdir -p $(TEST_BIN_DIR)
 	@$(CC) $(CFLAGS) $< src/parse/parse.c $(LDLIBS) -o $@
+$(WATCH_UNIT_TEST_BIN): tests/unit/watch_test.c | dirs sdk
+	@mkdir -p $(TEST_BIN_DIR)
+	@$(CC) $(CFLAGS) $< src/watch/watch_model.c src/watch/watch_target.c $(LDLIBS) -o $@
 $(VECTORS_TEST_BIN): tests/vectors/rpc_vectors_test.c | dirs sdk
 	@mkdir -p $(TEST_BIN_DIR)
 	@$(CC) $(CFLAGS) $< $(LDLIBS) -o $@

@@ -556,7 +556,7 @@ static void ensure_exec_reply_json(yai_sdk_reply_t *reply)
   yai_display_from_reply(reply, &mapped);
   if (reply->summary[0]) summary = reply->summary;
   else if (mapped.detail[0]) summary = mapped.detail;
-  else if (strcmp(reply->status, "ok") == 0 && strcmp(reply->code, "OK") == 0) summary = "Command completed.";
+  else if (strcmp(reply->status, "ok") == 0) summary = "Command completed.";
   else summary = "Command failed.";
   if (reply->hints[0][0]) hint_1 = reply->hints[0];
   else if (mapped.hint[0] && strcmp(reply->status, "ok") != 0) hint_1 = mapped.hint;

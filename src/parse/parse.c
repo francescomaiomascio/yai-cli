@@ -542,7 +542,7 @@ int yai_porcelain_parse_argv(int argc, char** argv, yai_porcelain_request_t* req
 
   if (strcmp(argv[cmdi], "watch") == 0) {
     if (cmdi + 1 >= argc || !argv[cmdi + 1]) {
-      return set_err(req, "missing watch command", "Run: yai watch <group> <command>");
+      return set_err(req, "missing watch target", "Run: yai watch <entrypoint> <topic> [op]");
     }
     req->kind = YAI_PORCELAIN_KIND_WATCH;
     req->cmd_argc = argc - (cmdi + 1);
