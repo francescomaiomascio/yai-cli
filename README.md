@@ -33,3 +33,8 @@ make
 - `docs/README.md`
 - `docs/development/cli-compatibility-model.md`
 - `docs/development/cli-dependency-matrix.md`
+
+## Law compatibility declaration
+
+- Human-readable declaration: `LAW_COMPATIBILITY.md`
+- Machine-readable declaration: `law-compatibility.v1.json`
