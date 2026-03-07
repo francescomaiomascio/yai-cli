@@ -547,16 +547,32 @@ static void ensure_exec_reply_json(yai_sdk_reply_t *reply)
 {
   char buf[768];
   yai_display_result_t mapped;
-  yai_display_from_reply(reply, &mapped);
+  const char *summary = NULL;
+  const char *hint_1 = NULL;
+  const char *hint_2 = NULL;
   size_t len;
   int n;
   if (!reply || reply->exec_reply_json) return;
+  yai_display_from_reply(reply, &mapped);
+  if (reply->summary[0]) summary = reply->summary;
+  else if (mapped.detail[0]) summary = mapped.detail;
+  else if (strcmp(reply->status, "ok") == 0 && strcmp(reply->code, "OK") == 0) summary = "Command completed.";
+  else summary = "Command failed.";
+  if (reply->hints[0][0]) hint_1 = reply->hints[0];
+  else if (mapped.hint[0] && strcmp(reply->status, "ok") != 0) hint_1 = mapped.hint;
+  else hint_1 = "";
+  if (reply->hints[1][0]) hint_2 = reply->hints[1];
+  else hint_2 = "";
   n = snprintf(buf, sizeof(buf),
-               "{\"type\":\"yai.exec.reply.v1\",\"status\":\"%s\",\"code\":\"%s\",\"reason\":\"%s\",\"summary\":\"%s\",\"command_id\":\"%s\",\"target_plane\":\"%s\",\"trace_id\":\"%s\"}",
+               "{\"type\":\"yai.exec.reply.v1\",\"status\":\"%s\",\"code\":\"%s\",\"reason\":\"%s\","
+               "\"summary\":\"%s\",\"hints\":[\"%s\",\"%s\"],"
+               "\"command_id\":\"%s\",\"target_plane\":\"%s\",\"trace_id\":\"%s\"}",
                reply->status[0] ? reply->status : "error",
                reply->code[0] ? reply->code : "INTERNAL_ERROR",
                reply->reason[0] ? reply->reason : "internal_error",
-               mapped.detail[0] ? mapped.detail : "Command failed.",
+               summary,
+               hint_1,
+               hint_2,
                reply->command_id[0] ? reply->command_id : "yai.unknown.unknown",
                reply->target_plane[0] ? reply->target_plane : "kernel",
                reply->trace_id);

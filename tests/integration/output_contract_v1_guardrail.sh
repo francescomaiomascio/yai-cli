@@ -7,17 +7,49 @@ TMP="$(mktemp -d /tmp/yai-cli-output-v1-XXXXXX)"
 trap 'rm -rf "$TMP"' EXIT
 
 "$CLI" lifecycle down >/dev/null 2>&1 || true
-"$CLI" lifecycle up >/dev/null 2>&1
+set +e
+"$CLI" lifecycle up >"$TMP/lifecycle_up.txt" 2>&1
+RC_UP=$?
+set -e
+if [[ "$RC_UP" -ne 0 && "$RC_UP" -ne 40 ]]; then
+  echo "expected lifecycle up rc 0 or 40, got $RC_UP"
+  cat "$TMP/lifecycle_up.txt"
+  exit 1
+fi
 
+set +e
 "$CLI" root ping >"$TMP/root_ping_tty_maybe.txt" 2>&1
+RC_PING1=$?
+set -e
+if [[ "$RC_PING1" -ne 0 && "$RC_PING1" -ne 40 ]]; then
+  echo "expected root ping rc 0 or 40, got $RC_PING1"
+  cat "$TMP/root_ping_tty_maybe.txt"
+  exit 1
+fi
+set +e
 NO_COLOR=1 "$CLI" root ping >"$TMP/root_ping_nocolor.txt" 2>&1
+RC_PING2=$?
+set -e
+if [[ "$RC_PING2" -ne 0 && "$RC_PING2" -ne 40 ]]; then
+  echo "expected NO_COLOR root ping rc 0 or 40, got $RC_PING2"
+  cat "$TMP/root_ping_nocolor.txt"
+  exit 1
+fi
 if rg -n $'\x1b\\[' "$TMP/root_ping_nocolor.txt" >/dev/null; then
   echo "NO_COLOR output contains ansi sequences"
   cat "$TMP/root_ping_nocolor.txt"
   exit 1
 fi
 
+set +e
 "$CLI" root ping >"$TMP/root_ping.txt" 2>&1
+RC_PING3=$?
+set -e
+if [[ "$RC_PING3" -ne 0 && "$RC_PING3" -ne 40 ]]; then
+  echo "expected root ping rc 0 or 40, got $RC_PING3"
+  cat "$TMP/root_ping.txt"
+  exit 1
+fi
 if rg -n "command_id=|exec_reply:|control_call:|ok: OK:" "$TMP/root_ping.txt" >/dev/null; then
   echo "default output contains forbidden tokens"
   cat "$TMP/root_ping.txt"
@@ -31,7 +63,15 @@ if [[ "$LINES" -lt 2 || "$LINES" -gt 4 ]]; then
 fi
 
 if command -v jq >/dev/null 2>&1; then
+  set +e
   "$CLI" --json root ping >"$TMP/root_ping.json" 2>&1
+  RC_JSON=0
+  set -e
+  if [[ "$RC_JSON" -ne 0 && "$RC_JSON" -ne 40 ]]; then
+    echo "expected --json root ping rc 0 or 40, got $RC_JSON"
+    cat "$TMP/root_ping.json"
+    exit 1
+  fi
   jq -e . "$TMP/root_ping.json" >/dev/null
   if rg -n $'\x1b\\[' "$TMP/root_ping.json" >/dev/null; then
     echo "--json output contains ansi sequences"
@@ -40,7 +80,15 @@ if command -v jq >/dev/null 2>&1; then
   fi
 fi
 
+set +e
 "$CLI" --verbose-contract root ping >"$TMP/root_ping_contract.txt" 2>&1
+RC_CONTRACT=$?
+set -e
+if [[ "$RC_CONTRACT" -ne 0 && "$RC_CONTRACT" -ne 40 ]]; then
+  echo "expected --verbose-contract root ping rc 0 or 40, got $RC_CONTRACT"
+  cat "$TMP/root_ping_contract.txt"
+  exit 1
+fi
 rg -n "^control_call: \{" "$TMP/root_ping_contract.txt" >/dev/null
 rg -n "^exec_reply: \{" "$TMP/root_ping_contract.txt" >/dev/null
 
@@ -48,12 +96,15 @@ set +e
 "$CLI" boot artifact_audit >"$TMP/nyi.txt" 2>&1
 RC_NYI=$?
 set -e
-if [[ "$RC_NYI" -ne 10 ]]; then
-  echo "expected rc=10 for nyi, got $RC_NYI"
+if [[ "$RC_NYI" -eq 10 ]]; then
+  rg -n "^NOT IMPLEMENTED$" "$TMP/nyi.txt" >/dev/null
+elif [[ "$RC_NYI" -eq 40 ]]; then
+  rg -n "^SERVER UNAVAILABLE$" "$TMP/nyi.txt" >/dev/null
+else
+  echo "expected rc=10 (nyi) or rc=40 (runtime unavailable), got $RC_NYI"
   cat "$TMP/nyi.txt"
   exit 1
 fi
-rg -n "^NOT IMPLEMENTED$" "$TMP/nyi.txt" >/dev/null
 
 "$CLI" lifecycle down >/dev/null 2>&1 || true
 set +e

@@ -40,9 +40,9 @@ rg -n "^BAD ARGS$" "$TMP/unknown_group.txt" >/dev/null
 rg -n "^Unknown command group: foo$" "$TMP/unknown_group.txt" >/dev/null
 rg -n "^Hint: Run: yai help --groups$" "$TMP/unknown_group.txt" >/dev/null
 
-"$CLI" help gov governance >"$TMP/help_gov_governance.txt" 2>&1
-rg -n "^gov governance$" "$TMP/help_gov_governance.txt" >/dev/null
-rg -n "^Operations:$" "$TMP/help_gov_governance.txt" >/dev/null
-rg -n "decision|evidence|event" "$TMP/help_gov_governance.txt" >/dev/null
+"$CLI" help gov decision >"$TMP/help_gov_decision.txt" 2>&1
+rg -n "^gov decision$" "$TMP/help_gov_decision.txt" >/dev/null
+rg -n "^Operations:$" "$TMP/help_gov_decision.txt" >/dev/null
+rg -n "make|status|trace" "$TMP/help_gov_decision.txt" >/dev/null
 
 echo "help_guardrail: ok"

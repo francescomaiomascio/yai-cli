@@ -165,9 +165,152 @@ static int render_plumbing_help(strbuf_t *sb)
   return 0;
 }
 
+static int is_gov_topic(const char *topic)
+{
+  return topic &&
+         (strcmp(topic, "decision") == 0 ||
+          strcmp(topic, "evidence") == 0 ||
+          strcmp(topic, "event") == 0 ||
+          strcmp(topic, "effect") == 0 ||
+          strcmp(topic, "disclosure") == 0);
+}
+
+static int render_watch_entrypoint_help(strbuf_t *sb)
+{
+  sb_appendf(sb, "watch\n\n");
+  sb_appendf(sb, "Topics:\n");
+  sb_appendf(sb, "  root               watch root-level command loops\n");
+  sb_appendf(sb, "  kernel             watch kernel-level command loops\n");
+  sb_appendf(sb, "  gov                watch governance command loops\n");
+  sb_appendf(sb, "  verify             watch verification command loops\n");
+  sb_appendf(sb, "  inspect            watch inspect command loops\n");
+  sb_appendf(sb, "\nUse: yai help watch <topic>\n");
+  return 0;
+}
+
+static int render_watch_topic_help(const char *topic, strbuf_t *sb)
+{
+  if (!topic || !topic[0]) {
+    return help_error("missing topic for entrypoint 'watch'", "Run: yai help watch");
+  }
+  if (!(strcmp(topic, "root") == 0 ||
+        strcmp(topic, "kernel") == 0 ||
+        strcmp(topic, "gov") == 0 ||
+        strcmp(topic, "verify") == 0 ||
+        strcmp(topic, "inspect") == 0)) {
+    return help_error("unknown topic under 'watch'", "Run: yai help watch");
+  }
+  sb_appendf(sb, "watch %s\n\n", topic);
+  sb_appendf(sb, "Usage:\n");
+  if (strcmp(topic, "root") == 0 || strcmp(topic, "kernel") == 0) {
+    sb_appendf(sb, "  yai watch %s ping [--interval-ms <ms>] [--count <n>]\n", topic);
+  } else if (strcmp(topic, "gov") == 0) {
+    sb_appendf(sb, "  yai watch gov decision status [--interval-ms <ms>] [--count <n>]\n");
+  } else if (strcmp(topic, "verify") == 0) {
+    sb_appendf(sb, "  yai watch verify law [--interval-ms <ms>] [--count <n>]\n");
+  } else {
+    sb_appendf(sb, "  yai watch inspect workspace [--interval-ms <ms>] [--count <n>]\n");
+  }
+  sb_appendf(sb, "\nNotes:\n");
+  sb_appendf(sb, "  Press 'q' or ESC to quit interactive watch mode.\n");
+  return 0;
+}
+
+static int render_gov_entrypoint_help(strbuf_t *sb)
+{
+  sb_appendf(sb, "gov\n\n");
+  sb_appendf(sb, "Topics:\n");
+  sb_appendf(sb, "  decision           governance decisions and records\n");
+  sb_appendf(sb, "  evidence           governance evidence collection\n");
+  sb_appendf(sb, "  event              governance event records\n");
+  sb_appendf(sb, "  effect             governed effect handling\n");
+  sb_appendf(sb, "  disclosure         disclosure workflows\n");
+  sb_appendf(sb, "\nUse: yai help gov <topic>\n");
+  return 0;
+}
+
+static int append_op_once(strbuf_t *sb, char ops[][64], size_t *count, const char *op, const char *desc)
+{
+  if (!sb || !ops || !count || !op || !op[0]) return 1;
+  for (size_t i = 0; i < *count; i++) {
+    if (strcmp(ops[i], op) == 0) return 0;
+  }
+  if (*count >= 32) return 0;
+  snprintf(ops[*count], 64, "%s", op);
+  (*count)++;
+  sb_appendf(sb, "  %-16s %s\n", op, (desc && desc[0]) ? desc : "governance operation");
+  return 0;
+}
+
+static int render_gov_topic_help(const yai_sdk_command_catalog_t *idx, const char *topic, strbuf_t *sb)
+{
+  const yai_sdk_command_group_t *g = NULL;
+  char listed[32][64];
+  size_t listed_count = 0;
+  size_t i;
+  if (!topic || !topic[0]) {
+    return help_error("missing topic for entrypoint 'gov'", "Run: yai help gov");
+  }
+  if (!is_gov_topic(topic)) {
+    return help_error("unknown topic under 'gov'", "Run: yai help gov");
+  }
+
+  memset(listed, 0, sizeof(listed));
+  sb_appendf(sb, "gov %s\n\n", topic);
+  sb_appendf(sb, "Operations:\n");
+
+  if (strcmp(topic, "decision") == 0) {
+    append_op_once(sb, listed, &listed_count, "make", "create a decision record");
+    append_op_once(sb, listed, &listed_count, "status", "inspect decision state");
+    append_op_once(sb, listed, &listed_count, "trace", "inspect traceability chain");
+    append_op_once(sb, listed, &listed_count, "validate", "validate decision contract");
+    append_op_once(sb, listed, &listed_count, "publish", "publish decision outcome");
+  } else if (strcmp(topic, "evidence") == 0) {
+    append_op_once(sb, listed, &listed_count, "status", "inspect evidence state");
+    append_op_once(sb, listed, &listed_count, "list", "list evidence records");
+  } else if (strcmp(topic, "event") == 0) {
+    append_op_once(sb, listed, &listed_count, "list", "list governance events");
+    append_op_once(sb, listed, &listed_count, "status", "inspect event status");
+  }
+
+  g = yai_sdk_command_catalog_find_group(idx, "governance");
+  if (g) {
+    for (i = 0; i < g->command_count; i++) {
+      const char *name = g->commands[i].name;
+      const char *u = NULL;
+      const char *op = NULL;
+      if (!name || !name[0]) continue;
+      u = strchr(name, '_');
+      if (!u) continue;
+      if ((size_t)(u - name) != strlen(topic) || strncmp(name, topic, strlen(topic)) != 0) continue;
+      op = u + 1;
+      if (!op[0]) continue;
+      append_op_once(sb, listed, &listed_count, op, g->commands[i].summary);
+    }
+  }
+
+  if (listed_count == 0) {
+    sb_appendf(sb, "  status           inspect %s state\n", topic);
+  }
+  sb_appendf(sb, "\nExamples:\n");
+  if (strcmp(topic, "decision") == 0) {
+    sb_appendf(sb, "  yai gov decision status\n");
+    sb_appendf(sb, "  yai gov decision trace\n");
+  } else {
+    sb_appendf(sb, "  yai gov %s status\n", topic);
+  }
+  return 0;
+}
+
 static int render_entrypoint_help(const yai_sdk_command_catalog_t *idx, const char *entrypoint, strbuf_t *sb)
 {
   int found = 0;
+  if (strcmp(entrypoint, "watch") == 0) {
+    return render_watch_entrypoint_help(sb);
+  }
+  if (strcmp(entrypoint, "gov") == 0) {
+    return render_gov_entrypoint_help(sb);
+  }
   sb_appendf(sb, "%s\n\n", entrypoint);
   sb_appendf(sb, "Topics:\n");
   if (strcmp(entrypoint, "doctor") == 0) {
@@ -208,6 +351,12 @@ static int render_entrypoint_help(const yai_sdk_command_catalog_t *idx, const ch
 
 static int render_topic_help(const yai_sdk_command_catalog_t *idx, const char *entrypoint, const char *topic, strbuf_t *sb)
 {
+  if (strcmp(entrypoint, "watch") == 0) {
+    return render_watch_topic_help(topic, sb);
+  }
+  if (strcmp(entrypoint, "gov") == 0) {
+    return render_gov_topic_help(idx, topic, sb);
+  }
   if (strcmp(entrypoint, "doctor") == 0 || strcmp(entrypoint, "inspect") == 0 || strcmp(entrypoint, "verify") == 0) {
     sb_appendf(sb, "%s %s\n\n", entrypoint, topic);
     sb_appendf(sb, "Usage:\n");

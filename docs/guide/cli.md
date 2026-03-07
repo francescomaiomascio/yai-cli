@@ -75,3 +75,28 @@ Capability topics:
 - `verify law|registry|runtime|workspace|reply|alignment`
 
 All capability commands support the standard output modes, including `--json`.
+
+## Runtime Resolution
+
+CLI runtime/bootstrap paths are resolved through the SDK canonical resolver layer.
+The CLI does not maintain machine-specific absolute path fallbacks.
+
+Resolver precedence:
+
+1. explicit command/config override
+2. environment override (`YAI_*`)
+3. SDK canonical install/runtime discovery
+4. deterministic error
+
+Relevant overrides:
+
+- `YAI_RUNTIME_HOME`
+- `YAI_INSTALL_ROOT`
+- `YAI_ROOT_SOCK`
+- `YAI_BOOT_BIN`
+- `YAI_ROOT_BIN`
+- `YAI_KERNEL_BIN`
+- `YAI_ENGINE_BIN`
+
+Normative pointer:
+- `deps/yai-law/docs/pointers/RUNTIME_RESOLUTION.pointer.md`

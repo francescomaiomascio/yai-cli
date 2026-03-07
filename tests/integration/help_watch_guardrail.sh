@@ -7,33 +7,34 @@ TMP="$(mktemp -d /tmp/yai-cli-help-watch-XXXXXX)"
 trap 'rm -rf "$TMP"' EXIT
 
 "$CLI" help >"$TMP/help.txt" 2>&1
-rg -n "^YAI Operator CLI$" "$TMP/help.txt" >/dev/null
+rg -n "^YAI Command Surface$" "$TMP/help.txt" >/dev/null
 rg -n "^Usage:$" "$TMP/help.txt" >/dev/null
-rg -n "^Command Groups:$" "$TMP/help.txt" >/dev/null
+rg -n "^Main Surface Commands:$" "$TMP/help.txt" >/dev/null
+rg -n "^  watch[[:space:]]+watch mode$" "$TMP/help.txt" >/dev/null
 
-"$CLI" help root >"$TMP/help_root.txt" 2>&1
-rg -n "^root$" "$TMP/help_root.txt" >/dev/null
-rg -n "^Commands:$" "$TMP/help_root.txt" >/dev/null
+"$CLI" help watch >"$TMP/help_watch.txt" 2>&1
+rg -n "^watch$" "$TMP/help_watch.txt" >/dev/null
+rg -n "^Topics:$" "$TMP/help_watch.txt" >/dev/null
+rg -n "^  root[[:space:]]+watch root-level command loops$" "$TMP/help_watch.txt" >/dev/null
 
 set +e
-"$CLI" root >"$TMP/root_only.txt" 2>&1
-RC_ROOT_ONLY=$?
+"$CLI" help watch nonsense >"$TMP/watch_topic_bad.txt" 2>&1
+RC_WATCH_BAD=$?
 set -e
-if [[ "$RC_ROOT_ONLY" -ne 20 ]]; then
-  echo "expected rc=20 for missing subcommand, got $RC_ROOT_ONLY"
-  cat "$TMP/root_only.txt"
+if [[ "$RC_WATCH_BAD" -ne 20 ]]; then
+  echo "expected rc=20 for unknown watch topic, got $RC_WATCH_BAD"
+  cat "$TMP/watch_topic_bad.txt"
   exit 1
 fi
-rg -n "^root$" "$TMP/root_only.txt" >/dev/null
-rg -n "^Commands:$" "$TMP/root_only.txt" >/dev/null
+rg -n "^help$" "$TMP/watch_topic_bad.txt" >/dev/null
+rg -n "^BAD ARGS$" "$TMP/watch_topic_bad.txt" >/dev/null
 
-"$CLI" help root ping >"$TMP/help_root_ping.txt" 2>&1
-rg -n "^Command:$" "$TMP/help_root_ping.txt" >/dev/null
-rg -n "^  root ping$" "$TMP/help_root_ping.txt" >/dev/null
-rg -n "^Usage:$" "$TMP/help_root_ping.txt" >/dev/null
+"$CLI" help watch root >"$TMP/help_watch_root.txt" 2>&1
+rg -n "^watch root$" "$TMP/help_watch_root.txt" >/dev/null
+rg -n "^Usage:$" "$TMP/help_watch_root.txt" >/dev/null
 
-YAI_PAGER=1 "$CLI" --no-pager help root >"$TMP/help_no_pager.txt" 2>&1
-rg -n "^root$" "$TMP/help_no_pager.txt" >/dev/null
+YAI_PAGER=1 "$CLI" --no-pager help watch >"$TMP/help_no_pager.txt" 2>&1
+rg -n "^watch$" "$TMP/help_no_pager.txt" >/dev/null
 
 set +e
 NO_COLOR=1 "$CLI" watch root ping --count 2 --interval 0.05 --no-clear >"$TMP/watch.txt" 2>&1
