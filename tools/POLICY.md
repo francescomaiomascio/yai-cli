@@ -4,4 +4,4 @@
 - No logic in `tools/bin/*` wrappers.
 - Tool implementation lives in `tools/python/yai_cli_tools/*`.
 - CI must call `tools/bin/yai-cli-verify`.
-- `deps/yai-law` is pinned and must remain untouched.
+- verify phases are compatibility-oriented and must not imply structural cross-repo pinning.

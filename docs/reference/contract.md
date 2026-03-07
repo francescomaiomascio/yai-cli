@@ -1,16 +1,14 @@
 # Contract Boundary
 
-`yai-cli` implements and consumes pinned specs in `deps/yai-law`.
-Specs in that directory are the contract source of truth.
+`yai-cli` consumes contract semantics as a compatibility consumer.
+It does not own normative law and does not structurally pin source repositories.
 
-## Canonical References
+## Canonical references
 
-- Commands contract: `deps/yai-law/registry/registry/commands.v1.json`
-- Commands schema: `deps/yai-law/registry/schema/commands.v1.schema.json`
-- Protocol envelope/IDs: `deps/yai-law/law/surfaces/protocol/include/transport.h`, `deps/yai-law/law/surfaces/protocol/include/yai_protocol_ids.h`
-- Errors/auth/roles: `deps/yai-law/law/surfaces/protocol/include/errors.h`, `deps/yai-law/law/surfaces/protocol/include/auth.h`, `deps/yai-law/law/surfaces/protocol/include/roles.h`
+- command and protocol semantics are defined by `yai-law`
+- SDK API semantics are defined by `yai-sdk`
 
-## Rule
+## CLI rule
 
-No command/protocol semantics may be invented outside pinned specs.
-If drift exists: open an issue and realign CLI/specs before release.
+No local command/protocol semantics may diverge from declared compatibility targets.
+Verify hooks check conformance but do not create structural dependency edges.

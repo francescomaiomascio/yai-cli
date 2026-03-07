@@ -5,11 +5,9 @@
 Use the project Makefile to build the CLI binary.
 Output target: `dist/bin/yai-cli`.
 
-## Runtime Prerequisites
+## Runtime prerequisites
 
-- Compatible C toolchain
-- Pinned `deps/yai-law` available
+- compatible C toolchain
+- compatibility targets available through declared manifests/exports
 
-## Verification
-
-Run the CLI binary and validate basic command routing in your target environment.
+A local `deps/yai-law` checkout may be used when present, but is not a structural requirement.

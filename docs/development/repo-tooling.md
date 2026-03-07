@@ -1,14 +1,14 @@
 # Repo Tooling
 
-`tools/` is the canonical location for repository automation.
+`tools/` hosts CLI automation.
 
-Rules:
-- `tools/bin/*` wrappers are intentionally thin and contain no business logic.
-- Python implementation lives in `tools/python/yai_cli_tools`.
-- CI executes the same verify command used locally.
+## Verify model
 
-Usage:
-- `tools/bin/yai-cli-verify --profile ci`
-- `tools/bin/yai-cli-verify --profile full`
-- `tools/bin/yai-cli-doctor`
-- `tools/bin/yai-cli-release bump`
+`yai-cli-tools verify` runs compatibility-oriented phases:
+- `layout`
+- `compatibility`
+- `build`
+- `tests`
+- `smoke` (full profile)
+
+`compatibility` is verify-only and must not be interpreted as structural pinning.

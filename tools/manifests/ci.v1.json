@@ -1,4 +1,4 @@
 {
   "profile": "ci",
-  "phases": ["layout", "specs", "build", "tests"]
+  "phases": ["layout", "compatibility", "build", "tests"]
 }

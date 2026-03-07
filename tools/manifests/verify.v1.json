@@ -1,4 +1,4 @@
 {
   "profile": "full",
-  "phases": ["layout", "specs", "build", "tests", "smoke"]
+  "phases": ["layout", "compatibility", "build", "tests", "smoke"]
 }

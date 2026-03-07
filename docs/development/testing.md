@@ -1,8 +1,10 @@
 # Testing
 
-Use `make test` for unit and vectors tests.
-Use `docs/development/e2e-smoke-control-call.md` for manual runtime spine validation.
+Core checks:
+- `make test`
+- integration guardrails under `tests/integration/`
 
-Operator capability pack guardrail:
+## Guardrail intent
 
-- `tests/integration/operator_capability_pack_guardrail.sh`
+Guardrails validate behavioral surface and output/contract stability.
+They should not encode structural repository dependency assumptions.

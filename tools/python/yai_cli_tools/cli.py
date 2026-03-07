@@ -22,7 +22,9 @@ def _run_verify(profile: str) -> int:
 
     mapping = {
         "layout": layout.run,
-        "specs": specs.run,
+        "compatibility": specs.run,
+        "specs": specs.run,   # deprecated alias
+        "law": specs.run,     # deprecated alias
         "build": build.run_phase,
         "tests": tests.run_phase,
         "smoke": smoke.run_phase,

@@ -1,28 +1,18 @@
 # yai-cli Documentation
 
-This directory is the documentation entrypoint for the YAI command surface, contract references, and repository governance for `yai-cli`.
+CLI docs are operational and development guidance for the operator surface.
 
-## Documentation map
+## Key development docs
 
-- `docs/guide/` - install, quickstart, command usage, troubleshooting
-- `docs/reference/` - contract-facing references and governance notes
-- `docs/development/` - build, tests, release flow, pinning, repo tooling
-- `docs/api/` - generated/API landing content
+- `docs/development/cli-compatibility-model.md`
+- `docs/development/cli-dependency-matrix.md`
+- `docs/development/repo-tooling.md`
+- `docs/development/testing.md`
 
-## Start sequence
+## Authority split
 
-1. `docs/guide/quickstart.md`
-2. `docs/reference/` materials relevant to your command family
-3. `docs/development/repo-tooling.md` for verification and release operations
+- Normative semantics: `yai-law`
+- Programmatic API/ABI: `yai-sdk`
+- Operator behavior and UX: `yai-cli`
 
-## Alignment rule
-
-CLI docs are informative for CLI operation.
-Normative contract authority remains in pinned `deps/yai-law/` artifacts.
-SDK API authority remains in pinned `deps/yai-sdk/` artifacts.
-
-## Docs architecture note
-
-For cross-repo truth boundaries and surface exposure policy, see:
-- `deps/yai-law/docs/pointers/DOCS_ARCHITECTURE.pointer.md`
-- `deps/yai-law/docs/pointers/SURFACE_POLICY.pointer.md`
+CLI docs must not imply structural cross-repo pinning.

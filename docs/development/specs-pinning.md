@@ -1,15 +1,18 @@
-# Specs Pinning
+# Compatibility Baseline (replaces specs-pinning)
 
-## Rule 1: Explicit pin
+Status: legacy title retained for continuity.
 
-`deps/yai-law` is a pin (commit or tag), not a floating reference.
+## Policy
 
-## Rule 2: Declared compatibility
+- `yai-cli` must not structurally pin `yai-law`.
+- `yai-cli` must not structurally pin `yai-sdk`.
+- `yai-cli` declares supported compatibility baselines.
+- verify hooks may check compatibility targets, but do not define dependency edges.
 
-`yai-cli` must declare which specs versions it supports.
-Reference: `COMPATIBILITY.md`.
+## Verify model
 
-## Rule 3: No drift
+Compatibility checks may use:
+- local exported baseline artifacts
+- optional local `deps/*` copies when present
 
-If `yai-law` changes, `yai-cli` must adapt.
-Out-of-contract behavior is not acceptable.
+Absence of local `deps/yai-law` is not by itself a structural failure.

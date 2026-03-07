@@ -1,41 +1,21 @@
 # YAI CLI (C)
 
-YAI CLI is the command surface of the YAI platform.
+YAI CLI is the operator surface consumer of the YAI ecosystem.
 
-It exposes governed command behavior for invoking, inspecting, and operating YAI under explicit law and aligned interfaces.
+## Platform role
 
-This repository contains the canonical CLI implementation of the platform.
+- `yai-law`: normative authority source
+- `yai-sdk`: programmatic surface
+- `yai-cli`: operator command surface
+- `yai`: integrated runtime
 
-## Platform position
+## Dependency posture
 
-`yai-law` → `yai-sdk` → `yai-cli` → `yai` → `yai-ops`
+- `yai-cli` does not structurally pin `yai-law`.
+- `yai-cli` does not structurally pin `yai-sdk`.
+- `yai-cli` declares compatibility and runs verify-only checks.
 
-Law defines the rules. The SDK carries the interface. The CLI exposes the surface.
-
-## Design posture
-
-- **Commands follow law**
-- **Behavior is explicit**
-- **Side effects are controlled**
-- **Outputs are reviewable**
-- **Compatibility is tracked**
-
-## Scope
-
-This repository owns the canonical command implementation for YAI.
-
-It does not own normative contract semantics (`yai-law`), platform implementation (`yai`), or shared governance tooling (`yai-infra`).
-
-## Contract discipline
-
-Pinned dependencies include:
-
-- `deps/yai-law/registry/commands.v1.json`
-- `deps/yai-law/registry/schema/commands.v1.schema.json`
-- `deps/yai-law/contracts/protocol/include/*`
-- `deps/yai-sdk/include/yai_sdk/public.h`
-
-Divergence from pinned law or aligned SDK interfaces is an implementation defect.
+Verify hooks are compatibility checks, not repository dependency edges.
 
 ## Build
 
@@ -48,20 +28,8 @@ make
 - `dist/bin/yai`
 - `dist/bin/yai-cli`
 
-## Usage
-
-```bash
-./dist/bin/yai --help
-./dist/bin/yai ws workspace create --ws-id demo
-./dist/bin/yai ws use demo
-./dist/bin/yai gov decision status
-./dist/bin/yai inspect bundle status
-```
-
-## Documentation
+## Docs
 
 - `docs/README.md`
-
-## License
-
-Apache-2.0. See `LICENSE`, `NOTICE`, and `THIRD_PARTY_NOTICES.md`.
+- `docs/development/cli-compatibility-model.md`
+- `docs/development/cli-dependency-matrix.md`
